@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /search
+Allow: /profile
+
+# Protected user content
+Disallow: /settings
+Disallow: /chat
+Disallow: /matches
+Disallow: /verify-otp
+
+Sitemap: https://skillswap.ai/sitemap.xml

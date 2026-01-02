@@ -1,0 +1,78 @@
+
+import React, { useEffect, useState } from 'react';
+import { motion as m } from 'framer-motion';
+import { MessageCircle, Clock, Save, ArrowRight } from 'lucide-react';
+import { authService } from '../services/authService';
+
+const motion = m as any;
+
+interface ResumeActivityProps {
+  activity?: any;
+  navigate: (to: string) => void;
+}
+
+const ResumeActivity: React.FC<ResumeActivityProps> = ({ activity, navigate }) => {
+  const [currentUserName, setCurrentUserName] = useState<string>('');
+
+  useEffect(() => {
+    authService.me().then(res => {
+      if (res.success && res.data) setCurrentUserName(res.data.name);
+    });
+  }, []);
+
+  const activities = [
+    ...(activity?.recentChats?.map((chat: any) => {
+      const partner = chat.participants.find((p: any) => p.user.name !== currentUserName)?.user;
+      return {
+        id: chat.id,
+        type: 'chat',
+        title: `Chat with ${partner?.name || 'Partner'}`,
+        sub: chat.messages[0]?.text || "Start collaborating!",
+        icon: <MessageCircle size={18} />,
+        color: "bg-blue-100 text-blue-600",
+        link: '/chat'
+      };
+    }) || []),
+    { 
+      id: 'pending', 
+      type: 'match', 
+      title: `${activity?.pendingRequests || 0} Pending Requests`, 
+      sub: "Review incoming swaps", 
+      icon: <Clock size={18} />, 
+      color: "bg-orange-100 text-orange-600",
+      link: '/matches'
+    }
+  ].slice(0, 3);
+
+  return (
+    <section className="py-12 px-4 md:px-6">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-xl font-bold text-slate-900 mb-8">Continue Your Journey</h2>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {activities.map((act) => (
+            <motion.div
+              key={act.id}
+              whileHover={{ x: 5 }}
+              onClick={() => navigate(act.link)}
+              className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${act.color}`}>
+                  {act.icon}
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-bold text-slate-900 truncate">{act.title}</h4>
+                  <p className="text-[11px] text-slate-500 truncate">{act.sub}</p>
+                </div>
+              </div>
+              <ArrowRight size={16} className="text-slate-300 group-hover:text-slate-900 group-hover:translate-x-1 transition-all flex-shrink-0" />
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default ResumeActivity;

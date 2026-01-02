@@ -1,0 +1,23 @@
+
+[
+  {
+    "topic": "SkillSwap Overview",
+    "content": "SkillSwap is a premium 1:1 skill exchange platform for Indian Gen-Z. It allows users to trade knowledge directly without money. Common swaps include React for UI Design, or Marketing for Python."
+  },
+  {
+    "topic": "How Matching Works",
+    "content": "Our Smart Matching algorithm looks at your 'TEACH' list and matches it with others' 'LEARN' lists. When a mutual interest is found (A teaches what B learns, and vice versa), a connection is suggested."
+  },
+  {
+    "topic": "Safety & Trust",
+    "content": "We verify all emails. Users can endorse each other after a successful swap. We have a zero-tolerance policy for harassment or commercial solicitation."
+  },
+  {
+    "topic": "Pricing",
+    "content": "SkillSwap is free. We believe education should be accessible through community collaboration."
+  },
+  {
+    "topic": "AI Career Mentor",
+    "content": "The AI Career Mentor (Gemini-powered) helps users optimize their learning paths and pitches their skills more effectively to potential partners."
+  }
+]

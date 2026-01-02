@@ -1,0 +1,221 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  uId             String?  @unique
+  name            String
+  email           String  @unique
+  isEmailVerified Boolean @default(false)
+  password        String
+
+  photo           Photo[]
+
+  bio                       String?
+  currentHashedRefreshToken String?
+  otp                       String?
+  otpExpiry                 DateTime?
+
+  // Relations
+  skills          SkillOnUser[]
+  matchesAsA      Match[]           @relation("UserAsA")
+  matchesAsB      Match[]           @relation("UserAsB")
+  reviewsGiven    Review[]          @relation("ReviewsGiven")
+  reviewsReceived Review[]          @relation("ReviewsReceived")
+  chatMembers     ChatParticipant[]
+  save            Save[]            @relation("UserSaves")
+  savedBy         Save[]            @relation("SavedUser")
+  messages        Message[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isEmailVerified])
+}
+
+model Skill {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String        @unique
+  slug         String?
+  category     String?
+  description  String?
+  popularity   Int           @default(0)
+  icon         String?
+  createdAt    DateTime      @default(now())
+  skillOnUsers SkillOnUser[]
+  matchSkills  MatchSkill[]
+}
+
+model SkillOnUser {
+  id      String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String     @db.ObjectId
+  skillId String     @db.ObjectId
+  role    SkillRole
+  level   SkillLevel @default(BEGINNER)
+  note    String?
+    createdAt DateTime  @default(now())
+
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([skillId])
+}
+
+enum SkillRole {
+  TEACH
+  LEARN
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
+
+model Match {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  userAId   String       @db.ObjectId
+  userBId   String       @db.ObjectId
+  skills    MatchSkill[]
+  status    MatchStatus  @default(PENDING)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  userA User @relation("UserAsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("UserAsB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  savedBy Save[] @relation("SavedMatch")
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+  @@index([status])
+}
+
+model MatchSkill {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  matchId String @db.ObjectId
+  skillId String @db.ObjectId
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([matchId])
+  @@index([skillId])
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model Chat {
+  id           String            @id @default(auto()) @map("_id") @db.ObjectId
+  participants ChatParticipant[]
+  messages     Message[]         
+  createdAt    DateTime          @default(now())
+}
+
+model ChatParticipant {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId   String   @db.ObjectId
+  chatId   String   @db.ObjectId
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([chatId])
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+model Message {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  chatId    String         @db.ObjectId
+  senderId  String         @db.ObjectId
+  text      String
+  seenBy    String[]
+  status    MessageStatus @default(SENT)
+  createdAt DateTime       @default(now())
+
+  user User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([chatId])
+  @@index([status])
+}
+
+model Review {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  reviewerId     String   @db.ObjectId
+  reviewedUserId String   @db.ObjectId
+  rating         Int
+  comment        String?
+  createdAt      DateTime @default(now())
+
+  reviewer     User @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewedUser User @relation("ReviewsReceived", fields: [reviewedUserId], references: [id])
+
+  @@index([reviewedUserId])
+  @@index([reviewerId])
+}
+
+model Photo {
+  id      String     @id @default(auto()) @map("_id") @db.ObjectId
+  url     String
+  userId  String    @db.ObjectId
+  type    Photo_Type
+
+  user    User      @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([userId])
+  @@unique([userId, type])
+}
+
+enum Photo_Type {
+  AVATAR
+  BACKGROUND
+  POST
+}
+
+model Save {
+  id   String   @id @default(auto()) @map("_id") @db.ObjectId
+  type SaveType
+
+  saverId String  @db.ObjectId
+  userId  String? @db.ObjectId
+  matchId String? @db.ObjectId
+
+  saver User   @relation("UserSaves", fields: [saverId], references: [id], onDelete: Cascade)
+  user  User?  @relation("SavedUser", fields: [userId], references: [id], onDelete: Cascade)
+  match Match? @relation("SavedMatch", fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([saverId, userId], map: "unique_user_save")
+  @@unique([saverId, matchId], map: "unique_match_save")
+  @@index([saverId])
+  @@index([userId])
+  @@index([matchId])
+}
+
+enum SaveType {
+  USER
+  MATCH
+  POST
+}
