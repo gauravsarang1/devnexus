@@ -11,8 +11,8 @@ interface NotificationsPaneProps {
   isSaving: boolean;
 }
 
-const NotificationsPane: React.FC<NotificationsPaneProps> = ({ 
-  prefs, onToggle, onPushActivate, onPushTest, isSaving 
+const NotificationsPane: React.FC<NotificationsPaneProps> = ({
+  prefs, onToggle, onPushActivate, onPushTest, isSaving
 }) => {
   return (
     <div className="max-w-xl">
@@ -26,9 +26,19 @@ const NotificationsPane: React.FC<NotificationsPaneProps> = ({
             <h4 className="text-lg font-bold mb-1">Persistent Push</h4>
             <p className="text-blue-100 text-xs mb-4">Background alerts for matches & messages.</p>
             <div className="flex gap-2">
-              <button onClick={onPushActivate} disabled={isSaving} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest ${prefs.push ? 'bg-white text-blue-600' : 'bg-blue-500 text-white'}`}>
-                {isSaving ? 'Working...' : prefs.push ? 'Push Enabled' : 'Enable Push'}
+              <button
+                onClick={onPushActivate}
+                disabled={isSaving}
+                className={`w-12 h-6 rounded-full transition-all relative 
+                ${prefs.push ? "bg-green-500" : "bg-slate-300"}
+                ${isSaving ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <motion.div
+                  animate={{ x: prefs.push ? 26 : 4 }}
+                  className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm"
+                />
               </button>
+
               {prefs.push && <button onClick={onPushTest} className="px-4 py-2 bg-white/10 rounded-xl text-xs font-bold">Test</button>}
             </div>
           </div>

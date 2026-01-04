@@ -26,6 +26,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
         const res = await userService.getDashboardActivity();
         if (res) {
           setActivity(res);
+          console.log("activity", res)
         }
       } catch (err) {
         console.error("Failed to load dashboard data", err);

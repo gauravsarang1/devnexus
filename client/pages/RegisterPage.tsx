@@ -142,6 +142,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
         offeredSkills,
         seekingSkills
       };
+      
       const response = await authService.register(payload);
       if (response.success) {
         toast.success('Registration successful! Verification code sent.');

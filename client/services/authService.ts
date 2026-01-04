@@ -46,5 +46,14 @@ export const authService = {
     } catch (err) {
       console.error("Logout failed", err);
     }
+  },
+
+  delete: async (): Promise<SimpleResponse> => {
+    try {
+      const response = await apiClient.delete<SimpleResponse>('/auth/delete');
+      return response.data;
+    } catch (error) {
+      console.error("Account deletion failed", error);
+    }
   }
 };

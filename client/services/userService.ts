@@ -62,5 +62,10 @@ export const userService = {
   savePushSubscription: async (subscription: any): Promise<BaseApiResponse<null>> => {
     const response = await apiClient.post<BaseApiResponse<null>>('/users/push-subscribe', { subscription });
     return response.data;
+  },
+
+  removePushSubscription: async (): Promise<BaseApiResponse<null>> => {
+    const response = await apiClient.get<BaseApiResponse<null>>('/users/remove-subscribe');
+    return response.data;
   }
 };
