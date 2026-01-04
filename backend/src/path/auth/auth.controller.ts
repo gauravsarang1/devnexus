@@ -94,7 +94,7 @@ export const authController = {
     login: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Fixed: Cast req to any to access custom validated property
-            const body = (req as any).validated?.body as LoginDTO;
+            const body = req.validated?.body as LoginDTO;
             const response = await authService.loginUser(body);
 
             if (!response.success) {
@@ -110,7 +110,12 @@ export const authController = {
 
     refreshToken: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const token = (req as any).cookies?.jid;
+            const cookie = req.headers?.cookie! as string;
+            const token = cookie
+                            .split("; ")
+                            .find(t => t.startsWith("jid="))
+                            ?.split("=")[1];
+            
             if (!token) return errorResponse(res, "No token found", 401);
             
             const response = await authService.refreshToken(token);
@@ -135,4 +140,15 @@ export const authController = {
             next(error);
         }
     },
+
+    delete: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = req.userId!;
+            await authService.delete(userId);
+
+            return successResponse(res, null, "Account deleted successfully");
+        } catch (error) {
+            next(error)
+        }
+    }
 };

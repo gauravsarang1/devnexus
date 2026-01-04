@@ -53,7 +53,11 @@ export class MessageService {
         // Format for socket consistent with frontend expectation
         const socketPayload = {
             ...message,
-            sender: message.user
+            sender: {
+                name: message.user.name,
+                avatar: message.user.photo.find(p => p.type === "AVATAR")?.url!,
+                uId: message.user.uId!
+            }
         };
 
         io.to(payload.chatId).emit('message:send', socketPayload);

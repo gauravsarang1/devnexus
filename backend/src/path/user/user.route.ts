@@ -15,6 +15,7 @@ router.get("/mutual-skills/:otherUserId", requireAuth, userController.getMutualS
 router.get("/:userId", userController.getUserById);
 
 router.post("/push-subscribe", requireAuth, userController.saveSubscription);
+router.get("remove-subscribe", requireAuth, userController.removePushSubscription);
 router.put("/update-profile", requireAuth, validate(UserValidation.updateProfile), userController.updateProfile);
 router.put("/change-password", requireAuth, validate(UserValidation.changePassword), userController.updatePassword);
 router.delete("/delete-account", requireAuth, userController.deleteAccount);

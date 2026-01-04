@@ -6,7 +6,7 @@ export const sendRefreshToken = (res: Response, token: string) => {
     httpOnly: true,
     path: '/', // Set to root so it's sent to /api/auth/refresh
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 };

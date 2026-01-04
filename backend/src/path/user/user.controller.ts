@@ -30,6 +30,19 @@ export const userController = {
         }
     },
 
+    removePushSubscription: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const userId = (req as any).userId!;
+
+            const response = await UserService.removePushSubscription(userId);
+            if (!response.success) return errorResponse(res, response.error || "Update failed", 400);
+            
+            return successResponse(res, null, "Subscription saved successfully");
+        } catch (error) {
+            (next as any)(error);
+        }
+    },
+
     getActivity: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = (req as any).userId!;

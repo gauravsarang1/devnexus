@@ -15,5 +15,6 @@ router.get("/check-availability", authController.checkAvailability);
 router.post("/refresh", authController.refreshToken);
 router.post("/logout", authController.logout);
 router.post("/verify-email-otp", validate(verifyEmailOtpSchema), authController.verifyEmailOtp);
+router.delete("/delete", requireAuth, authController.delete)
 
 export default router;

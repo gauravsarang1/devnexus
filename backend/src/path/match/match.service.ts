@@ -6,23 +6,63 @@ import { PushService } from '../../services/pushService.js';
 import { sendMail } from '../../email/sendMail.js';
 import matchAcceptedEmailHtml from '../../email/template/matchAcceptedEmailHtml.js';
 import { NotificationService } from '../notification/notification.service.js';
+import { MatchNotifier } from './match.notifications.js';
 
 export class MatchService {
+
+    private static triggerMatchNotifications(data: {
+        matchId: string;
+        senderName: string;
+        targetUserId: string;
+    }) {
+        const { matchId, senderName, targetUserId } = data;
+
+        // 🔔 DB notification
+        NotificationService.createNotification({
+            userId: targetUserId,
+            type: 'MATCH_REQUEST',
+            title: 'New Swap Request',
+            message: `${senderName} wants to swap skills with you!`,
+            link: '/matches',
+            payload: { matchId }
+        }).catch(err => {
+            console.error("Notification DB failed:", err.message);
+        });
+
+        // ⚡ Realtime socket
+        io.to(`user:${targetUserId}`).emit('notification', {
+            type: 'MATCH_REQUEST',
+            title: 'New Swap Request',
+            message: `${senderName} wants to swap skills with you!`,
+            link: '/matches',
+            payload: { matchId }
+        });
+
+        // 📱 Push notification
+        PushService.sendNotification(targetUserId, {
+            title: "New Swap Request",
+            message: `${senderName} wants to swap skills with you!`,
+            link: "/matches"
+        }).catch(err => {
+            console.error("Push failed:", err.message);
+        });
+    }
+
     static async getAllMatches(userId: string, type: string, params: any = {}): Promise<ServiceResponse> {
         const page = Number(params.page) || 1;
         const limit = Number(params.limit) || 10;
         const skip = (page - 1) * limit;
 
         let where: any = {};
-        
+
         if (type === 'incoming') {
             where = { userBId: userId, status: 'PENDING' };
         } else if (type === 'sent') {
             where = { userAId: userId, status: 'PENDING' };
         } else if (type === 'active') {
-            where = { 
+            where = {
                 OR: [{ userAId: userId }, { userBId: userId }],
-                status: 'ACCEPTED' 
+                status: 'ACCEPTED'
             };
         } else {
             where = { OR: [{ userAId: userId }, { userBId: userId }] };
@@ -57,12 +97,12 @@ export class MatchService {
             };
         });
 
-        return { 
-            success: true, 
-            data: { 
-                matches: formattedMatches, 
-                pagination: { total, page, limit, hasNextPage } 
-            } 
+        return {
+            success: true,
+            data: {
+                matches: formattedMatches,
+                pagination: { total, page, limit, hasNextPage }
+            }
         };
     }
 
@@ -86,7 +126,7 @@ export class MatchService {
             prisma.skillOnUser.findMany({ where: { userId: senderId }, include: { skill: true } }),
             prisma.skillOnUser.findMany({ where: { userId: targetUserId }, include: { skill: true } }),
         ]);
-        
+
         const matchedSkillIds = userASkills
             .filter(a => userBSkills.some(b => b.skillId === a.skillId && b.role !== a.role))
             .map(s => s.skillId);
@@ -102,30 +142,19 @@ export class MatchService {
             }
         });
 
-        await NotificationService.createNotification({
-            userId: targetUserId,
-            type: 'MATCH_REQUEST',
-            title: 'New Swap Request',
-            message: `${sender?.name || 'Someone'} wants to swap skills with you!`,
-            link: '/matches',
-            payload: { matchId: match.id }
-        });
-
-        io.to(`user:${targetUserId}`).emit('notification', {
-            type: 'MATCH_REQUEST',
-            title: 'New Swap Request',
-            message: `${sender?.name || 'Someone'} wants to swap skills with you!`,
-            link: '/matches',
-            payload: { matchId: match.id }
+        MatchNotifier.matchRequested({
+            targetUserId,
+            senderName: sender?.name || 'Someone',
+            matchId: match.id
         });
 
         return { success: true, data: match };
     }
 
     static async updateMatchStatus(userId: string, matchId: string, status: 'ACCEPTED' | 'DECLINED'): Promise<ServiceResponse> {
-        const match = await prisma.match.findUnique({ 
+        const match = await prisma.match.findUnique({
             where: { id: matchId },
-            include: { 
+            include: {
                 userB: { select: { name: true } },
                 userA: { select: { id: true, name: true, email: true } }
             }
@@ -133,6 +162,16 @@ export class MatchService {
         if (!match || match.userBId !== userId) return { success: false, error: "Unauthorized or record not found" };
 
         const result = await prisma.$transaction(async (tx) => {
+            if (status === 'DECLINED') {
+                const deleteMatch = await tx.match.delete({
+                    where: {
+                        id: matchId
+                    }
+                })
+
+                return deleteMatch;
+            }
+
             const updated = await tx.match.update({
                 where: { id: matchId },
                 data: { status }
@@ -140,7 +179,7 @@ export class MatchService {
 
             if (status === 'ACCEPTED') {
                 const participants = [match.userAId, match.userBId];
-                
+
                 const existingChat = await tx.chat.findFirst({
                     where: {
                         AND: participants.map(id => ({
@@ -161,25 +200,13 @@ export class MatchService {
                     });
                 }
 
-                await NotificationService.createNotification({
-                    userId: match.userAId,
-                    type: 'MATCH_ACCEPTED',
-                    title: 'Swap Accepted!',
-                    message: `${match.userB.name} accepted your swap request. Start chatting!`,
-                    link: '/chat',
-                    payload: { matchId: match.id }
+                MatchNotifier.matchAccepted({
+                    requesterId: match.userAId,
+                    requesterEmail: match.userA.email,
+                    requesterName: match.userA.name,
+                    accepterName: match.userB.name,
+                    matchId: match.id,
                 });
-
-                io.to(`user:${match.userAId}`).emit('notification', {
-                    type: 'MATCH_ACCEPTED',
-                    title: 'Swap Accepted!',
-                    message: `${match.userB.name} accepted your swap request. Start chatting!`,
-                    link: '/chat',
-                    payload: { matchId: match.id }
-                });
-
-                const emailHtml = matchAcceptedEmailHtml(match.userA.name, match.userB.name);
-                await sendMail(match.userA.email, "Your Skill Swap Request was Accepted!", emailHtml);
             }
             return updated;
         });

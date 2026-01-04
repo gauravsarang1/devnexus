@@ -12,7 +12,7 @@ export interface SocketMessagePayload {
   chatId: string;
   text: string;
   senderId: string;
-  createdAt: string;
+  createdAt: Date;
   status: 'SENT' | 'DELIVERED' | 'READ';
   sender: {
     name: string;

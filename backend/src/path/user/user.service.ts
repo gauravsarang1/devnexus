@@ -6,7 +6,7 @@ import * as PrismaModule from '@prisma/client';
 import { sendMail } from '../../email/sendMail.js';
 import farewellEmailHtml from '../../email/template/farewellEmailHtml.js';
 
-const { SkillRole } = PrismaModule as any;
+const { SkillRole } = PrismaModule;
 
 export class UserService {
   private static formatUserWithPhotos(user: any) {
@@ -45,6 +45,14 @@ export class UserService {
     await prisma.user.update({
       where: { id: userId },
       data: { pushSubscription: typeof subscription === 'string' ? subscription : JSON.stringify(subscription) }
+    });
+    return { success: true };
+  }
+
+  static async removePushSubscription(userId: string): Promise<ServiceResponse> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { pushSubscription: null }
     });
     return { success: true };
   }

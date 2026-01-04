@@ -199,6 +199,18 @@ export class authService {
         return { success: true, accessToken, refreshToken };
     }
 
+    static async delete(userId: string): Promise<ServiceResponse> {
+        await prisma.user.delete({
+            where: {
+                id: userId
+            }
+        });
+
+        return {
+            success: true
+        }
+    }
+
     static async refreshToken(token: string | undefined): Promise<ServiceResponse & { accessToken?: string; refreshToken?: string }> {
         if (!token) return { success: false, error: "No token provided" };
         const payload = verifyRefreshToken(token) as JwtPayload;
