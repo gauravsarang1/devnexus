@@ -46,10 +46,10 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) =>
         if (meRes.success && meRes.data) {
           setCurrentUser(meRes.data);
           const chatsRes = await chatService.getChats(1, 15);
-          setChats(chatsRes.chats);
-          setHasMoreChats(chatsRes.pagination.hasNextPage);
+          setChats(chatsRes?.chats ?? []);
+          setHasMoreChats(chatsRes?.pagination?.hasNextPage ?? false);
 
-          socketRef.current = io(window.location.origin.includes('localhost') ? 'http://localhost:4000' : '/', { transports: ['websocket'] });
+          socketRef.current = io(import.meta.env.VITE_API_URL, { transports: ['websocket'] });
           
           socketRef.current.on('connect', () => {
             socketRef.current?.emit('hello', { id: meRes.data.id, name: meRes.data.name });
@@ -70,13 +70,14 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) =>
 
           socketRef.current.on('message:send', (msg: ChatMessage) => {
             setChats(prev => {
-              const existing = prev.find(c => c.id === msg.chatId);
+              const prevArr = prev ?? [];
+              const existing = prevArr.find(c => c.id === msg.chatId);
               if (existing) {
-                return prev.map(c => 
+                return prevArr.map(c => 
                   c.id === msg.chatId ? { ...c, messages: [msg], updatedAt: new Date().toISOString() } : c
                 ).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
               }
-              return prev;
+              return prevArr;
             });
             
             if (selectedChat?.id === msg.chatId) {
@@ -107,9 +108,9 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) =>
     try {
       const nextPage = chatsPage + 1;
       const res = await chatService.getChats(nextPage, 15);
-      setChats(prev => [...prev, ...res.chats]);
+      setChats(prev => [...(prev ?? []), ...(res?.chats ?? [])]);
       setChatsPage(nextPage);
-      setHasMoreChats(res.pagination.hasNextPage);
+      setHasMoreChats(res?.pagination?.hasNextPage ?? false);
     } catch (err) { console.error(err); } 
     finally { setIsFetchingMoreChats(false); }
   };
@@ -153,7 +154,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) =>
   };
 
   const filteredChats = useMemo(() => {
-    if (!chatSearchQuery.trim()) return chats;
+    if (!chatSearchQuery.trim()) return chats ?? [];
     const q = chatSearchQuery.toLowerCase();
     return chats.filter(c => c.participants.find(p => p.userId !== currentUser?.id)?.user.name.toLowerCase().includes(q));
   }, [chats, chatSearchQuery, currentUser?.id]);
@@ -184,13 +185,15 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) =>
 
   if (isLoading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
 
-  const selectedPartner = selectedChat?.participants.find(p => p.userId !== currentUser?.id)?.user;
+  const selectedPartner = selectedChat?.participants.find(p => p.id !== currentUser?.id);
   const isSelectedPartnerOnline = selectedPartner ? onlineUsers.has(selectedPartner.id) : false;
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
-      <Navbar navigate={navigate} />
-      <main className="flex-grow pt-[72px] md:pt-[88px] flex overflow-hidden">
+      <div className="hidden md:flex">
+        <Navbar navigate={navigate}/>
+      </div>
+      <main className="flex-grow Md:pt-[72px] md:pt-[88px] flex overflow-hidden">
         <ChatSidebar 
           chats={filteredChats} selectedChatId={selectedChat?.id} currentUser={currentUser}
           searchQuery={chatSearchQuery} onSearchChange={setChatSearchQuery}
@@ -206,7 +209,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) =>
                 isOnline={isSelectedPartnerOnline}
                 isTyping={isPartnerTyping} onBack={() => setSelectedChat(null)} onNavigate={navigate} 
               />
-              <MessageList 
+              <MessageList
                 messages={messages} currentUser={currentUser} 
                 partner={selectedPartner}
                 isPartnerTyping={isPartnerTyping} scrollRef={scrollRef} 

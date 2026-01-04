@@ -4,7 +4,7 @@ import { store } from '../src/store';
 import { logout } from '../src/store/slices/authSlice';
 
 // Base URL points to the backend server
-const BACKEND_URL = process.env.VITE_BACKEND_URL || 'http://localhost:4000';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const apiClient = axios.create({
   baseURL: `${BACKEND_URL}/api`,

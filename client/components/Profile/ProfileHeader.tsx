@@ -141,7 +141,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
             ) : (
               <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 flex items-center justify-center md:justify-start gap-2">
+                  <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 flex items-center justify-center md:justify-start gap-2">
                     {user.name} <CheckCircle2 size={24} className="text-blue-500" />
                   </h1>
                   <p className="text-lg font-bold text-blue-600">@{user.uId}</p>

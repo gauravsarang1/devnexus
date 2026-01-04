@@ -71,10 +71,12 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar navigate={navigate} />
-      <main className="flex-grow pt-[100px] md:pt-[120px] pb-24 md:pb-12 max-w-5xl mx-auto w-full px-4 md:px-6">
-        <header className="mb-12">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">My Swaps</h1>
+      <div className="hidden md:flex">
+        <Navbar navigate={navigate}/>
+      </div>
+      <main className="flex-grow pt-5 md:pt-[120px] pb-24 md:pb-12 max-w-5xl mx-auto w-full px-4 md:px-6">
+        <header className="mb-6 md:mb-12">
+          <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">My Swaps</h1>
           <p className="text-slate-500 font-medium">Track your peer collaborations.</p>
         </header>
 

@@ -111,6 +111,7 @@ export const authController = {
     refreshToken: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const cookie = req.headers?.cookie! as string;
+            console.error("req", req.cookies)
             const token = cookie
                             .split("; ")
                             .find(t => t.startsWith("jid="))
