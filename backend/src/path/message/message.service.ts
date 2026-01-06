@@ -5,6 +5,7 @@ import * as PrismaModule from '@prisma/client'
 import io from '../../sockets/socketHandlers.js'
 import { PushService } from '../../services/pushService.js';
 import { NotificationService } from '../notification/notification.service.js';
+import { MessageNotifier } from './message.notification.js';
 
 export class MessageService {
     static async sendMessage(payload: {
@@ -60,38 +61,17 @@ export class MessageService {
             }
         };
 
-        io.to(payload.chatId).emit('message:send', socketPayload);
-        
-        existingChat.participants.forEach(async (p) => {
-            if (p.userId !== payload.senderId) {
-                await NotificationService.createNotification({
-                    userId: p.userId,
-                    type: 'CHAT',
-                    title: `Message from ${message.user.name}`,
-                    message: message.text,
-                    link: '/chat',
-                    payload: { chatId: payload.chatId }
-                });
-
-                io.to(`user:${p.userId}`).emit('notification', {
-                    type: 'CHAT',
-                    title: `Message from ${message.user.name}`,
-                    message: message.text,
-                    link: '/chat',
-                    payload: { chatId: payload.chatId }
-                });
-
-                await PushService.sendNotification(p.userId, {
-                    title: `New Message from ${message.user.name} 💬`,
-                    message: message.text,
-                    link: '/chat'
-                });
-            }
-        });
-        
         await prisma.chat.update({
             where: { id: payload.chatId },
             data: { updatedAt: new Date() }
+        });
+
+        const reciverId = existingChat.participants.find((p) => p.userId !== payload.senderId)?.userId!;
+        MessageNotifier.sendMessage({
+            message,
+            chatId: message.chatId,
+            reciverId,
+            socketPayload
         });
 
         return { success: true, data: socketPayload };
