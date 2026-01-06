@@ -42,7 +42,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
         setUnreadCount(countRes);
       } catch (err) { console.error("Notif error", err); }
 
-      socket = io(window.location.origin.includes('localhost') ? 'http://localhost:4000' : '/', {
+      socket = io(import.meta.env.VITE_API_URL!, {
         transports: ['websocket']
       });
 
