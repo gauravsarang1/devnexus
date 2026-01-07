@@ -3,21 +3,22 @@ import { Toaster } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 
-import LandingPage from './pages/LandingPage';
-import HomePage from './pages/HomePage';
-import SearchPage from './pages/SearchPage';
-import MatchesPage from './pages/MatchesPage';
-import ChatPage from './pages/ChatPage';
-import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import VerifyOtpPage from './pages/VerifyOtpPage';
-import SEO from './components/SEO';
+import LandingPage from './src/pages/LandingPage';
+import HomePage from './src/pages/HomePage';
+import SearchPage from './src/pages/SearchPage';
+import MatchesPage from './src/pages/MatchesPage';
+import ChatPage from './src/pages/ChatPage';
+import ProfilePage from './src/pages/ProfilePage';
+import SettingsPage from './src/pages/SettingsPage';
+import LoginPage from './src/pages/LoginPage';
+import RegisterPage from './src/pages/RegisterPage';
+import VerifyOtpPage from './src/pages/VerifyOtpPage';
+import SEO from './src/components/SEO';
 
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './src/components/ProtectedRoute';
 import { fetchCurrentUser, refreshAccessToken } from './src/store/slices/authSlice';
 import { AppDispatch } from './src/store';
+import { SocketProvider } from './src/sockets/socketProvider';
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -48,7 +49,8 @@ const App: React.FC = () => {
     <>
       <Toaster richColors position="top-center" closeButton />
 
-      <Routes>
+      <SocketProvider>
+        <Routes>
         {/* Public */}
         <Route path="/" element={<><SEO title="Home" /><LandingPage navigate={navigate} /></>} />
         <Route path="/login" element={<><SEO title="Login" /><LoginPage navigate={navigate} /></>} />
@@ -65,6 +67,7 @@ const App: React.FC = () => {
           <Route path="/settings" element={<><SEO title="Account Settings" /><SettingsPage navigate={navigate} /></>} />
         </Route>
       </Routes>
+      </SocketProvider>
     </>
   );
 };
