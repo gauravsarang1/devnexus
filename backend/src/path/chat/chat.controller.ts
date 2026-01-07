@@ -6,21 +6,21 @@ import { ChatService } from "./chat.service.js";
 export const chatController = {
     createChat: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { participantsIds } = (req as any).validated!.body;
-            const userId = (req as any).userId!;
+            const { participantsIds } = req.validated!.body;
+            const userId = req.userId!;
             const participants: string[] = Array.from(new Set([userId, ...participantsIds]));
             const response = await ChatService.createChat({ participants });
             if (!response.success) return errorResponse(res, response.error || "Failed to create chat", 500);
             return successResponse(res, response.data, "Chat created successfully", 201);
         } catch (error) { 
-            (next as any)(error); 
+            next(error); 
         }
     },
 
     getChatById: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { id } = (req as any).params;
-            const userId = (req as any).userId!;
+            const { id } = req.params;
+            const userId = req.userId!;
             const response = await ChatService.getChatById(id, userId);
             if (!response.success) return errorResponse(res, response.error || "Chat not found", 404);
             return successResponse(res, response.data, "Chat retrieved successfully");

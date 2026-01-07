@@ -4,30 +4,18 @@ import { authService, RegisterDTO, LoginDTO } from "./auth.service.js";
 import prisma from "../../config/prisma.js";
 import { errorResponse, successResponse } from "../../utils/apiResponse.js";
 import { clearRefreshToken, sendRefreshToken } from "../../utils/cookie.js";
-import { generate6DigitOtp } from "../../utils/generate6DigitOtp.js";
-import { sendMail } from "../../email/sendMail.js";
-import createVerificationEmailHtml from "../../email/template/createVerificationEmailHtml.js";
-import accountSuccessEmailHtml from "../../email/template/accountSuccessEmailHtml.js";
 
 export const authController = {
     register: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Fixed: Cast req to any to access custom validated property
             const body = (req as any).validated?.body as RegisterDTO;
-            const otp = generate6DigitOtp();
             
-            const response = await authService.registerUser({
-                ...body,
-                otp
-            });
+            const response = await authService.registerUser(body);
 
             if (!response.success) {
                 return errorResponse(res, response.error || "Failed to Register User", 400);
             }
-
-            const { email, name } = response.data!;
-            const emailHtml = createVerificationEmailHtml(name, otp);
-            await sendMail(email, "Skillswap Account Verification", emailHtml);
 
             return successResponse(res, null, "User Registered Successfully", 201);
         } catch (error) {
@@ -82,9 +70,6 @@ export const authController = {
                 return errorResponse(res, response.error || "Failed to Verify Email OTP", 400);
             }
 
-            const emailHtml = accountSuccessEmailHtml(response.data?.name!);
-            await sendMail(response.data!.email!, "Skillswap Account Verified Successfully", emailHtml);
-
             return successResponse(res, null, "Email Verified Successfully", 200);
         } catch (error) {
             next(error);
@@ -111,7 +96,10 @@ export const authController = {
     refreshToken: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const cookie = req.headers?.cookie! as string;
-            console.error("req", req.cookies)
+            if(!cookie) {
+                return errorResponse(res, "Cookie not found", 401);
+            }
+            
             const token = cookie
                             .split("; ")
                             .find(t => t.startsWith("jid="))

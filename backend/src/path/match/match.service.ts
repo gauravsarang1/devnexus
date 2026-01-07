@@ -1,57 +1,16 @@
 
 import prisma from '../../config/prisma.js';
 import { ServiceResponse } from '../../types/serviceResponse.js';
-import io from '../../sockets/socketHandlers.js';
-import { PushService } from '../../services/pushService.js';
-import { sendMail } from '../../email/sendMail.js';
-import matchAcceptedEmailHtml from '../../email/template/matchAcceptedEmailHtml.js';
-import { NotificationService } from '../notification/notification.service.js';
+import { getCache, invalidateMatchCache, setCache } from '../../utils/cache.js';
 import { MatchNotifier } from './match.notifications.js';
 
 export class MatchService {
-
-    private static triggerMatchNotifications(data: {
-        matchId: string;
-        senderName: string;
-        targetUserId: string;
-    }) {
-        const { matchId, senderName, targetUserId } = data;
-
-        // 🔔 DB notification
-        NotificationService.createNotification({
-            userId: targetUserId,
-            type: 'MATCH_REQUEST',
-            title: 'New Swap Request',
-            message: `${senderName} wants to swap skills with you!`,
-            link: '/matches',
-            payload: { matchId }
-        }).catch(err => {
-            console.error("Notification DB failed:", err.message);
-        });
-
-        // ⚡ Realtime socket
-        io.to(`user:${targetUserId}`).emit('notification', {
-            type: 'MATCH_REQUEST',
-            title: 'New Swap Request',
-            message: `${senderName} wants to swap skills with you!`,
-            link: '/matches',
-            payload: { matchId }
-        });
-
-        // 📱 Push notification
-        PushService.sendNotification(targetUserId, {
-            title: "New Swap Request",
-            message: `${senderName} wants to swap skills with you!`,
-            link: "/matches"
-        }).catch(err => {
-            console.error("Push failed:", err.message);
-        });
-    }
-
     static async getAllMatches(userId: string, type: string, params: any = {}): Promise<ServiceResponse> {
         const page = Number(params.page) || 1;
         const limit = Number(params.limit) || 10;
         const skip = (page - 1) * limit;
+
+        const cacheKey = `match:user:${userId}:page:${page}:type:${type}`;
 
         let where: any = {};
 
@@ -66,6 +25,15 @@ export class MatchService {
             };
         } else {
             where = { OR: [{ userAId: userId }, { userBId: userId }] };
+        }
+
+        const cachedMatches = await getCache(cacheKey);
+        if (cachedMatches) {
+            console.log("match response from cache")
+            return {
+                success: true,
+                data: JSON.parse(cachedMatches)
+            }
         }
 
         const [matches, total] = await Promise.all([
@@ -97,12 +65,21 @@ export class MatchService {
             };
         });
 
+        const formatedResponse = {
+            matches: formattedMatches,
+            pagination: {
+                total,
+                page,
+                limit,
+                hasNextPage
+            }
+        }
+
+        await setCache(cacheKey, formatedResponse, 180);
+
         return {
             success: true,
-            data: {
-                matches: formattedMatches,
-                pagination: { total, page, limit, hasNextPage }
-            }
+            data: formatedResponse
         };
     }
 
@@ -148,6 +125,9 @@ export class MatchService {
             matchId: match.id
         });
 
+        await invalidateMatchCache(senderId, match.id);
+        await invalidateMatchCache(targetUserId, match.id);
+
         return { success: true, data: match };
     }
 
@@ -160,6 +140,9 @@ export class MatchService {
             }
         });
         if (!match || match.userBId !== userId) return { success: false, error: "Unauthorized or record not found" };
+        if (match.status !== 'PENDING') {
+            return { success: false, error: 'Match already processed' };
+        }
 
         const result = await prisma.$transaction(async (tx) => {
             if (status === 'DECLINED') {
@@ -211,15 +194,27 @@ export class MatchService {
             return updated;
         });
 
+        await invalidateMatchCache(userId, matchId);
+        await invalidateMatchCache(match.userBId, matchId);
+
         return { success: true, data: result };
     }
 
     static async getMatchById(matchId: string): Promise<ServiceResponse> {
+        const cacheKey = `match:data:${matchId}`;
+        const cachedMatch = await getCache(cacheKey);
+        if (cachedMatch) {
+            return {
+                success: true,
+                data: JSON.parse(cachedMatch)
+            }
+        }
         const match = await prisma.match.findUnique({
             where: { id: matchId },
             include: { userA: true, userB: true, skills: { include: { skill: true } } }
         });
         if (!match) return { success: false, error: "Match not found" };
+        await setCache(cacheKey, match, 500);
         return { success: true, data: match };
     }
 }

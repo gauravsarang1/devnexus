@@ -1,6 +1,6 @@
 import prisma from "../../config/prisma.js";
 import { ServiceResponse } from "../../types/serviceResponse.js";
-import { SearchParams } from "../../types/search-params.js";
+import { getCache, setCache } from "../../utils/cache.js";
 
 export interface CreateChatDTO {
     participants: string[];
@@ -38,6 +38,16 @@ export class ChatService {
         id: string,
         userId: string
     ): Promise<ServiceResponse> {
+        const cacheKey = `chat:${id}`;
+
+        const cachedChat = await getCache(cacheKey);
+        if (cachedChat) {
+            return {
+                success: true,
+                data: JSON.parse(cachedChat)
+            }
+        }
+
         const chat = await prisma.chat.findFirst({
             where: { id },
             include: {
@@ -61,7 +71,9 @@ export class ChatService {
         const formattedChat = chat.participants.map(({ user }) => ({
             ...user,
             avatar: user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
-        }))
+        }));
+
+        await setCache(cacheKey, formattedChat, 30);
 
         return { success: true, data: formattedChat };
     }
@@ -70,10 +82,25 @@ export class ChatService {
         userId: string,
         params: any = {}
     ): Promise<ServiceResponse> {
+
         const page = Number(params.page) || 1;
         const limit = Number(params.limit) || 15;
         const skip = (page - 1) * limit;
 
+        // ✅ cache key must include pagination
+        const cacheKey = `chat:user:${userId}:page:${page}:limit:${limit}`;
+
+        // 1️⃣ Check cache
+        const cachedChats = await getCache(cacheKey);
+        if (cachedChats) {
+            console.log("returned from cache ✅");
+            return {
+                success: true,
+                data: JSON.parse(cachedChats),
+            };
+        }
+
+        // 2️⃣ Fetch from DB
         const [chats, total] = await Promise.all([
             prisma.chat.findMany({
                 where: { participants: { some: { userId } } },
@@ -81,11 +108,19 @@ export class ChatService {
                     participants: {
                         include: {
                             user: {
-                                select: { name: true, photo: true, uId: true, id: true },
+                                select: {
+                                    name: true,
+                                    photo: true,
+                                    uId: true,
+                                    id: true,
+                                },
                             },
                         },
                     },
-                    messages: { take: 1, orderBy: { createdAt: "desc" } },
+                    messages: {
+                        take: 1,
+                        orderBy: { createdAt: "desc" },
+                    },
                 },
                 orderBy: { updatedAt: "desc" },
                 skip,
@@ -96,24 +131,32 @@ export class ChatService {
             }),
         ]);
 
+        // 3️⃣ Format for frontend
         const formattedChats = chats.map(({ participants, ...chat }) => ({
             ...chat,
             participants: participants.map(({ user }) => ({
                 ...user,
-                avatar: user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
+                avatar:
+                    user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
             })),
         }));
 
         const hasNextPage = page * limit < total;
 
+        const responseData = {
+            chats: formattedChats,
+            pagination: { total, page, limit, hasNextPage },
+        };
+
+        // 4️⃣ Save to cache (SHORT TTL for chats)
+        await setCache(cacheKey, responseData, 20); // ⏱ 20 seconds
+
         return {
             success: true,
-            data: {
-                chats: formattedChats,
-                pagination: { total, page, limit, hasNextPage },
-            },
+            data: responseData,
         };
     }
+
 
     static async deleteChat(payload: {
         chatId: string;

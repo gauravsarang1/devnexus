@@ -94,7 +94,8 @@ export const userController = {
 
     getAllUsers: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const response = await UserService.getAllUsers((req as any).query);
+            const userId = req.userId!
+            const response = await UserService.getAllUsers(userId, req.query);
             if (!response.success) return errorResponse(res, response.error || "Failed to fetch users", 400);
             return successResponse(res, response.data, "Users retrieved");
         } catch (error) { 

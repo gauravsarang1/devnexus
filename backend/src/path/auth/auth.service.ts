@@ -3,6 +3,9 @@ import prisma from "../../config/prisma.js";
 import { ServiceResponse } from "../../types/serviceResponse.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../../utils/jwt.js";
 import * as PrismaModule from "@prisma/client";
+import { generate6DigitOtp } from '../../utils/generate6DigitOtp.js';
+import { AuthNotifier } from "./auth.notification.js";
+import { getCache, setCache } from "../../utils/cache.js";
 
 const { SkillRole, SkillLevel } = PrismaModule as any;
 
@@ -11,7 +14,6 @@ export interface RegisterDTO {
     uId: string;
     email: string;
     password: string;
-    otp: string;
     offeredSkills?: string[];
     seekingSkills?: string[];
 }
@@ -37,11 +39,11 @@ const REFRESH_ROTATION_THRESHOLD_MS = 24 * 60 * 60 * 1000; // 1 day
 
 // Curated high-quality mesh gradients for profile backgrounds
 const DEFAULT_BANNERS = [
-  "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80", // Blue/Purple
-  "https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&w=1200&q=80", // Dark Blue
-  "https://images.unsplash.com/photo-1557682224-5b8590cb9cfa?auto=format&fit=crop&w=1200&q=80", // Pink/Orange
-  "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80", // Rainbow Mesh
-  "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1200&q=80", // White/Grey abstract
+    "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80", // Blue/Purple
+    "https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&w=1200&q=80", // Dark Blue
+    "https://images.unsplash.com/photo-1557682224-5b8590cb9cfa?auto=format&fit=crop&w=1200&q=80", // Pink/Orange
+    "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&w=1200&q=80", // Rainbow Mesh
+    "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?auto=format&fit=crop&w=1200&q=80", // White/Grey abstract
 ];
 
 export class authService {
@@ -55,6 +57,14 @@ export class authService {
                 return { success: false, error: "User already exists" };
             } else {
                 await prisma.user.delete({ where: { email: data.email } });
+            }
+        }
+
+        const otp = generate6DigitOtp();
+        if (!otp) {
+            return {
+                success: false,
+                error: "Failed to generate otp!"
             }
         }
 
@@ -76,17 +86,17 @@ export class authService {
                     password: hashedPassword,
                     uId: data.uId,
                     name: data.name,
-                    otp: data.otp,
+                    otp: otp,
                     otpExpiry: otpExpiry
                 }
             });
 
             // Auto-assign Photos to prevent blank states
             await tx.photo.createMany({
-              data: [
-                { userId: newUser.id, url: diceBearAvatar, type: 'AVATAR' },
-                { userId: newUser.id, url: randomBanner, type: 'BACKGROUND' }
-              ]
+                data: [
+                    { userId: newUser.id, url: diceBearAvatar, type: 'AVATAR' },
+                    { userId: newUser.id, url: randomBanner, type: 'BACKGROUND' }
+                ]
             });
 
             if (cleanOffered.length > 0) {
@@ -128,10 +138,29 @@ export class authService {
             return newUser;
         });
 
+        AuthNotifier.verifyEmailMail({
+            name: user.name,
+            email: user.email,
+            otp
+        });
+
         return { success: true, data: { name: user.name, email: user.email } };
     }
 
     static async me(userId: string): Promise<ServiceResponse> {
+        const cacheKey = `user:data:${userId}`;
+
+        // 1️⃣ Check cache first
+        const cachedUser = await getCache(cacheKey);
+        if (cachedUser) {
+            console.log("me returnerd from cache ✅")
+            return {
+                success: true,
+                data: JSON.parse(cachedUser),
+            };
+        }
+
+        // 2️⃣ Fetch from DB
         const user = await prisma.user.findUnique({
             where: { id: userId },
             select: {
@@ -144,19 +173,28 @@ export class authService {
                 skills: {
                     include: { skill: true }
                 },
-                photo: true // Include photos to format them
+                photo: true
             }
         });
 
         if (!user) return { success: false, error: "User not found" };
         if (!user.isEmailVerified) return { success: false, error: "User is not verified" };
 
-        // Format user for frontend using the standard photo mapping
-        const avatar = user.photo?.find((p: any) => p.type === 'AVATAR')?.url;
-        const background = user.photo?.find((p: any) => p.type === 'BACKGROUND')?.url;
+        // 3️⃣ Format user (frontend-ready)
+        const avatar = user.photo?.find(p => p.type === "AVATAR")?.url ?? null;
+        const background = user.photo?.find(p => p.type === "BACKGROUND")?.url ?? null;
         const { photo, ...rest } = user;
 
-        return { success: true, data: { ...rest, avatar, background } };
+        const formattedUser = {
+            ...rest,
+            avatar,
+            background,
+        };
+
+        // 4️⃣ Save to cache (TTL = 5 min)
+        await setCache(cacheKey, formattedUser, 300);
+
+        return { success: true, data: formattedUser };
     }
 
     static async verifyEmailOtp(payload: { email: string; otp: string }): Promise<ServiceResponse<UserResponse>> {
@@ -171,6 +209,11 @@ export class authService {
             where: { email: payload.email },
             data: { isEmailVerified: true, otp: null, otpExpiry: null },
             select: { name: true, email: true }
+        });
+
+        AuthNotifier.verificationSuccessMail({
+            name: user.name,
+            email: user.email
         });
 
         return { success: true, data: updatedUser };

@@ -3,11 +3,14 @@ import 'dotenv/config';
 import { httpServer } from './sockets/socketHandlers.js';
 import { initializeSocketHandlers } from './sockets/socketHandlers.js';
 import { updateSkillPopularity } from './cron/skillPopularity.js';
+import {connectRedis} from './config/redis.js';
 
 /**
  * Initialize Socket.io handlers
  */
 initializeSocketHandlers();
+
+connectRedis()
 
 /**
  * Start HTTP server
@@ -23,7 +26,7 @@ httpServer.listen(PORT, () => {
 // Daily skill popularity update at midnight
 setInterval(updateSkillPopularity, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
 // Initial run
-updateSkillPopularity();
+//updateSkillPopularity();
 
 /**
  * Graceful shutdown

@@ -3,8 +3,8 @@ import prisma from '../../config/prisma.js';
 import { ServiceResponse } from '../../types/serviceResponse.js';
 import bcrypt from "bcryptjs";
 import * as PrismaModule from '@prisma/client';
-import { sendMail } from '../../email/sendMail.js';
-import farewellEmailHtml from '../../email/template/farewellEmailHtml.js';
+import { UserNotifier } from './user.notification.js';
+import { deleteChache, getCache, setCache } from '../../utils/cache.js';
 
 const { SkillRole } = PrismaModule;
 
@@ -31,6 +31,14 @@ export class UserService {
   }
 
   static async getUserByUId(uId: string): Promise<ServiceResponse> {
+    const cacheKey = `user:uId:${uId}`;
+    const cachedUser = await getCache(cacheKey);
+    if(cachedUser) {
+      return {
+        success: true,
+        data: JSON.parse(cachedUser)
+      }
+    }
     const user = await prisma.user.findUnique({
       where: { uId },
       include: { 
@@ -38,6 +46,7 @@ export class UserService {
           photo: true
       }
     });
+    await setCache(cacheKey, this.formatUserWithPhotos(user), 180);
     return { success: true, data: this.formatUserWithPhotos(user) };
   }
 
@@ -79,6 +88,15 @@ export class UserService {
   }
 
   static async getDashboardActivity(userId: string): Promise<ServiceResponse> {
+    const cacheKey = `user:data:${userId}:dashboard`;
+    const cachedDashboard = await getCache(cacheKey);
+    if(cachedDashboard) {
+      console.log("dashboard getted from cache ✅")
+      return {
+        success: true,
+        data: JSON.parse(cachedDashboard)
+      }
+    }
     const [pendingCount, recentChats, trendingSkills, suggestions, unreadNotifs] = await Promise.all([
         prisma.match.count({ where: { userBId: userId, status: 'PENDING' } }),
         prisma.chat.findMany({
@@ -95,24 +113,27 @@ export class UserService {
         prisma.notification.count({ where: { userId, isRead: false } })
     ]);
 
-    const formattedChats = recentChats.map((c: any) => ({
+    const formattedChats = recentChats.map((c) => ({
         ...c,
-        participants: c.participants.map((p: any) => ({
+        participants: c.participants.map((p) => ({
             ...p,
-            user: { ...p.user, avatar: p.user.photo?.[0]?.url }
+            user: { ...p.user, avatar: p.user.photo.find(p => p.type === "AVATAR")?.url! }
         }))
     }));
 
-    return {
-        success: true,
-        data: {
-            hasActivity: pendingCount > 0 || formattedChats.length > 0 || unreadNotifs > 0,
+    const formattedResponse = {
+      hasActivity: pendingCount > 0 || formattedChats.length > 0 || unreadNotifs > 0,
             pendingRequests: pendingCount,
             recentChats: formattedChats,
             trendingSkills,
             suggestions: suggestions.data.users,
             unreadNotificationsCount: unreadNotifs
-        }
+    }
+
+    await setCache(cacheKey, formattedResponse, 300);
+    return {
+        success: true,
+        data: formattedResponse
     };
   }
 
@@ -120,6 +141,16 @@ export class UserService {
     const page = Number(params.page) || 1;
     const limit = Number(params.limit) || 10;
     const skip = (page - 1) * limit;
+
+    const cacheKey = `user:data${userId}:suggested:page:${page}`;
+    const cachedSuggestedMatches = await getCache(cacheKey);
+    if(cachedSuggestedMatches) {
+      console.log("suggested matches from cache ✅");
+      return {
+        success: true,
+        data: JSON.parse(cachedSuggestedMatches)
+      }
+    }
 
     const mySeeking = await prisma.skillOnUser.findMany({
         where: { userId, role: SkillRole.LEARN },
@@ -160,16 +191,35 @@ export class UserService {
     ]);
 
     const formattedUsers = users.map(u => this.formatUserWithPhotos(u));
+    const formattedResponse = {
+      users: formattedUsers,
+      pagination: {
+        total,
+        page,
+        limit,
+        hasNextPage: (page * limit) < total
+      }
+    }
 
-    return { success: true, data: { users: formattedUsers, pagination: { total, page, limit, hasNextPage: (page * limit) < total } } };
+    await setCache(cacheKey, formattedResponse, 180);
+    return { success: true, data: formattedResponse };
   }
 
-  static async getAllUsers(params: any): Promise<ServiceResponse> {
+  static async getAllUsers(userId: string, params: any): Promise<ServiceResponse> {
     const page = Number(params.page) || 1;
     const limit = Number(params.limit) || 10;
     const skip = (page - 1) * limit;
     const search = params.search || '';
 
+    const cacheKey = `user:data:${userId}:page:${page}:search:${search}`;
+    const cachedUsers = await getCache(cacheKey);
+    if(cachedUsers) {
+      console.log("users geted from cache ✅")
+      return {
+        success: true,
+        data: JSON.parse(cachedUsers)
+      }
+    }
     const where: any = {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
@@ -193,7 +243,18 @@ export class UserService {
 
     const formattedUsers = users.map(u => this.formatUserWithPhotos(u));
 
-    return { success: true, data: { users: formattedUsers, pagination: { total, page, limit, hasNextPage: (page * limit) < total } } };
+    const formattedResponse = {
+      users: formattedUsers,
+      pagination: {
+        total,
+        page,
+        limit,
+        hasNextPage: (page * limit) < total
+      }
+    }
+
+    await setCache(cacheKey, formattedResponse, 180);
+    return { success: true, data: formattedResponse };
   }
 
   static async updateProfile(id: string, data: any): Promise<ServiceResponse> {
@@ -222,6 +283,9 @@ export class UserService {
       include: { photo: true, skills: { include: { skill: true } } }
     });
 
+    await deleteChache(`user:data:${user.id}`);
+    await deleteChache(`user:uId${updatedUser?.uId}`);
+
     return { success: true, data: this.formatUserWithPhotos(updatedUser) };
   }
 
@@ -239,11 +303,13 @@ export class UserService {
 
   static async deleteAccount(userId: string): Promise<ServiceResponse> {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } });
-    if (user) {
-        const emailHtml = farewellEmailHtml(user.name);
-        await sendMail(user.email, "Your SkillSwap Account has been Closed", emailHtml);
-    }
     await prisma.user.delete({ where: { id: userId } });
+    if (user) {
+        UserNotifier.accountCloseMail({
+          name: user.name,
+          email: user.email
+        });
+    }
     return { success: true };
   }
 }
