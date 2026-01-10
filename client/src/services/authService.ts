@@ -27,6 +27,8 @@ export const authService = {
 
   register: async (data: RegisterPayload): Promise<SimpleResponse> => {
     const response = await apiClient.post<SimpleResponse>('/auth/register', data);
+        console.log("Register response:", response.data);
+
     return response.data;
   },
 
