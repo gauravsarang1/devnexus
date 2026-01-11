@@ -2,11 +2,21 @@
 import React from 'react';
 import { motion as m } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import { User } from '../types';
 
 // Cast motion to any to avoid property existence errors in JSX
 const motion = m as any;
 
-const DashboardHero: React.FC = () => {
+const DashboardHero: React.FC<{currentUser: User}> = ({currentUser}) => {
+
+  //current time based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
   return (
     <section className="pt-32 md:pt-40 pb-8 px-4 md:px-6">
       <motion.div 
@@ -19,7 +29,7 @@ const DashboardHero: React.FC = () => {
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles size={18} className="text-blue-600" />
-            <span className="text-sm font-bold text-blue-600 uppercase tracking-widest">Good Morning, Aryan!</span>
+            <span className="text-sm font-bold text-blue-600 uppercase tracking-widest">{getGreeting()}, {currentUser?.name}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
             Who would you like to build with today?

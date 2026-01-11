@@ -2,14 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch } from 'react-redux';
 import { Sparkles, CheckCircle2, BookOpen, Zap, Loader2 } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import MobileNav from '../components/MobileNav';
-import Footer from '../components/Footer';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import SkillBadge from '../components/Profile/SkillBadge';
 import AddSkillModal from '../components/Profile/AddSkillModal';
 import ProfileStats from '../components/Profile/ProfileStats';
-import { authService } from '../services/authService';
 import { userService } from '../services/userService';
 import { matchService } from '../services/matchService';
 import { skillService } from '../services/skillService';
@@ -18,6 +15,8 @@ import { fetchCurrentUser } from '../store/slices/authSlice';
 import { AppDispatch } from '../store';
 import { toast } from 'sonner';
 import { User, SkillLevel, SkillRole, Skill } from '../types';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,6 +30,8 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
   const [isAddingSkill, setIsAddingSkill] = useState<SkillRole | null>(null);
   const [editData, setEditData] = useState({ name: '', bio: '' });
 
+  const currentUser: User | null = useSelector((state: RootState) => state.auth.user);
+
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,16 +43,16 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
     const init = async () => {
       setIsLoading(true);
       try {
-        if (profileUid) {
+        if (profileUid && profileUid !== currentUser?.uId) {
           const data = await userService.getProfile(profileUid);
           setUser(data);
           const mutual = await matchService.getMutualSkills(data.id);
           setMutualSkills(mutual);
         } else {
-          const res = await authService.me();
-          if (res.success && res.data) {
-            setUser(res.data);
-            setEditData({ name: res.data.name, bio: res.data.bio || '' });
+          if (currentUser) {
+            setUser(currentUser);
+            setEditData({ name: currentUser.name, bio: currentUser.bio || '' });
+            navigate('/profile');
           }
         }
         const skillsData = await skillService.getAllSkills();
@@ -98,9 +99,6 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
     try {
       if (action === 'remove') await skillService.removeUserSkill(id);
       else if (level) await skillService.updateUserSkill(id, level);
-      
-      const meRes = await authService.me();
-      if (meRes.success && meRes.data) setUser(meRes.data);
       dispatch(fetchCurrentUser());
     } catch (err) { toast.error("Action failed"); }
   };
@@ -116,8 +114,6 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
         level
       });
       setIsAddingSkill(null);
-      const meRes = await authService.me();
-      if (meRes.success && meRes.data) setUser(meRes.data);
       dispatch(fetchCurrentUser());
       toast.success("Skill added!");
     } catch (err) { toast.error("Failed to add skill"); }
@@ -127,7 +123,6 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar navigate={navigate} />
       <main className="flex-grow pt-[100px] md:pt-[120px] pb-24 md:pb-12 px-4 md:px-6 max-w-4xl mx-auto w-full">
         <ProfileHeader 
           user={user} isOwnProfile={isOwnProfile} isEditing={isEditing} setIsEditing={setIsEditing}
@@ -202,7 +197,7 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
           <AddSkillModal role={isAddingSkill} allSkills={allSkills} onAdd={handleAddSkill} onClose={() => setIsAddingSkill(null)} />
         )}
       </AnimatePresence>
-      <MobileNav navigate={navigate} /><Footer />
+      <MobileNav navigate={navigate} />
     </div>
   );
 };

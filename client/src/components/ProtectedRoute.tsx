@@ -1,12 +1,13 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import Navbar from "./Navbar";
+import Footer from "./Footer";
 
-const ProtectedRoute = () => {
+const ProtectedRoute: React.FC<{ navigate: (to: string) => void }> = ({ navigate }) => {
   const { token, isAuthenticated } = useSelector(
     (state: RootState) => state.auth
   );
-  const location = useLocation();
 
   // ⏳ Wait until auth is hydrated (VERY important)
   if (!isAuthenticated) {
@@ -19,17 +20,19 @@ const ProtectedRoute = () => {
 
   // 🚫 Not authenticated → redirect to login
   if (!token) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: location }} // 🔥 remember original route
-      />
-    );
+    navigate('/login');
   }
 
   // ✅ Authenticated → allow route
-  return <Outlet />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar navigate={navigate}/>
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
 };
 
 export default ProtectedRoute;

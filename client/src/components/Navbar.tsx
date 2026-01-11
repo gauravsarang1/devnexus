@@ -21,8 +21,8 @@ import {
   SocketPresencePayload,
 } from "../types";
 import { setToken } from "../store/slices/authSlice";
-import { AppDispatch } from "../store";
-import { useDispatch } from "react-redux";
+import { AppDispatch, RootState } from "../store";
+import { useDispatch, useSelector } from "react-redux";
 
 interface NavbarProps {
   navigate?: (to: string) => void;
@@ -35,17 +35,12 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
+  const currentUser: User | null = useSelector((state: RootState) => state.auth.user);
   // ---------- INITIAL DATA ----------
   useEffect(() => {
     const init = async () => {
-      const res = await authService.me();
-      if (!res.success || !res.data) return;
-
-      setCurrentUser(res.data);
-
       const [notifsRes, unread] = await Promise.all([
         notificationService.getNotifications(1, 15),
         notificationService.getUnreadCount(),
@@ -54,7 +49,6 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
       setNotifications(notifsRes.notifications);
       setUnreadCount(unread);
     };
-
     init();
   }, []);
 

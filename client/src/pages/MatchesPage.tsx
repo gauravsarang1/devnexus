@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Inbox, Send, Users, Loader2 } from 'lucide-react';
-import Navbar from '../components/Navbar';
 import MobileNav from '../components/MobileNav';
-import Footer from '../components/Footer';
 import MatchCard from '../components/Matches/MatchCard';
 import { matchService } from '../services/matchService';
 import { Match } from '../types';
@@ -71,9 +68,6 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <div className="hidden md:flex">
-        <Navbar navigate={navigate}/>
-      </div>
       <main className="flex-grow pt-5 md:pt-[120px] pb-24 md:pb-12 max-w-5xl mx-auto w-full px-4 md:px-6">
         <header className="mb-6 md:mb-12">
           <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">My Swaps</h1>
@@ -108,7 +102,6 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({ navigate })
           </>
         )}
       </main>
-      <div className="hidden md:block"><Footer /></div>
       <MobileNav navigate={navigate} />
     </div>
   );

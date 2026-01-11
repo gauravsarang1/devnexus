@@ -15,9 +15,7 @@ import {
   Zap,
   ArrowRight,
 } from "lucide-react";
-import Navbar from "../components/Navbar";
 import MobileNav from "../components/MobileNav";
-import Footer from "../components/Footer";
 import UserCard from "../components/Search/UserCard";
 import { skillService } from "../services/skillService";
 import { Skill } from "../types";
@@ -25,6 +23,8 @@ import { userService } from "../services/userService";
 import { matchService } from "../services/matchService";
 import { aiService } from "../services/aiService";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
@@ -42,6 +42,8 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
   const [users, setUsers] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   // AI Suggestions State
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
@@ -163,9 +165,6 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <div className="hidden md:flex">
-        <Navbar navigate={navigate} />
-      </div>
       <div className="pt-5 md:pt-36 pb-6 bg-white sticky top-0 z-40 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
           <div className="relative w-full">
@@ -343,6 +342,7 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
                         <UserCard
                           key={u.id + idx}
                           user={u}
+                          currentUser={currentUser}
                           onConnect={handleConnect}
                           onNavigate={navigate}
                         />
@@ -382,7 +382,6 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
         </div>
       </main>
       <MobileNav navigate={navigate} />
-      <Footer />
     </div>
   );
 };

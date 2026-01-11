@@ -40,11 +40,11 @@ export const fetchCurrentUser = createAsyncThunk(
   'auth/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await authService.me();
-      if (response.success) {
-        return response.data;
+      const response = await apiClient.get('/auth/me');
+      if (response.data.success) {
+        return response.data.data as User;
       }
-      return rejectWithValue(response.message);
+      return rejectWithValue(response.data.message);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to fetch user');
     }

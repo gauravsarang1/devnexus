@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Loader2, MessageSquare } from "lucide-react";
-import Navbar from "../components/Navbar";
 import MobileNav from "../components/MobileNav";
 import ChatSidebar from "../components/Chat/ChatSidebar";
 import ChatHeader from "../components/Chat/ChatHeader";
@@ -181,9 +180,6 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
-      <div className="hidden md:flex">
-        <Navbar navigate={navigate} />
-      </div>
       <main className="flex-grow Md:pt-[72px] md:pt-[88px] flex overflow-hidden">
         <ChatSidebar
           chats={filteredChats}

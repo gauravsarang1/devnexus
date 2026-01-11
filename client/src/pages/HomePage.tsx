@@ -1,16 +1,16 @@
 
 import React, { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
 import DashboardHero from '../components/DashboardHero';
 import ResumeActivity from '../components/ResumeActivity';
 import SkillDiscovery from '../components/SkillDiscovery';
 import SuggestedMatches from '../components/SuggestedMatches';
 import MobileNav from '../components/MobileNav';
-import Footer from '../components/Footer';
 import EmptyState from '../components/EmptyState';
 import AICoach from '../components/AICoach';
 import { userService } from '../services/userService';
 import { Loader2 } from 'lucide-react';
+import { useSelector, UseSelector } from 'react-redux';
+import { RootState } from '../store';
 
 interface HomePageProps {
   navigate: (to: string) => void;
@@ -20,13 +20,14 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
   const [loading, setLoading] = useState(true);
   const [activity, setActivity] = useState<any>(null);
 
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
   useEffect(() => {
     const loadData = async () => {
       try {
         const res = await userService.getDashboardActivity();
         if (res) {
           setActivity(res);
-          console.log("activity", res)
         }
       } catch (err) {
         console.error("Failed to load dashboard data", err);
@@ -46,10 +47,9 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Navbar navigate={navigate} />
+    <>
       <main className="flex-grow pb-24 md:pb-0">
-        <DashboardHero />
+        <DashboardHero currentUser={currentUser}/>
         {activity ? (
           <>
             <ResumeActivity activity={activity} navigate={navigate} />
@@ -64,12 +64,9 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
           />
         )}
       </main>
-      <div className="hidden md:block">
-        <Footer />
-      </div>
       <MobileNav navigate={navigate} />
-      <AICoach />
-    </div>
+      <AICoach user={currentUser} />
+    </>
   );
 };
 

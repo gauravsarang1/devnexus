@@ -61,7 +61,7 @@ const App: React.FC = () => {
         <Route path="/verify-otp" element={<><SEO title="Verify Email" /><VerifyOtpPage navigate={navigate} /></>} />
 
         {/* Protected */}
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute navigate={navigate}/>}>
           <Route path="/home" element={<><SEO title="Dashboard" /><HomePage navigate={navigate} /></>} />
           <Route path="/search" element={<><SEO title="Find Partners" /><SearchPage navigate={navigate} /></>} />
           <Route path="/matches" element={<><SEO title="My Swaps" /><MatchesPage navigate={navigate} /></>} />

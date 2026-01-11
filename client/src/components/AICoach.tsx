@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, X, Send, Bot, Loader2, Compass, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { authService } from '../services/authService';
 import { aiService } from '../services/aiService';
 import { User } from '../types';
 
@@ -12,7 +11,7 @@ interface Message {
   content: string;
 }
 
-const AICoach: React.FC = () => {
+const AICoach: React.FC<{ user: User }> = ({ user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [userData, setUserData] = useState<User | null>(null);
@@ -21,12 +20,6 @@ const AICoach: React.FC = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    authService.me().then(res => {
-      if (res.success) setUserData(res.data);
-    });
-  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {

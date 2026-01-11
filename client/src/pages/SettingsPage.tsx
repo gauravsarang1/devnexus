@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { User as UserIcon, Lock, Bell, Shield, Loader2 } from "lucide-react";
-import Navbar from "../components/Navbar";
 import MobileNav from "../components/MobileNav";
-import Footer from "../components/Footer";
 import SettingsSidebar from "../components/Settings/SettingsSidebar";
 import AccountPane from "../components/Settings/AccountPane";
 import SecurityPane from "../components/Settings/SecurityPane";
@@ -170,7 +168,6 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <Navbar navigate={navigate} />
       <main className="flex-grow pt-[100px] md:pt-[120px] pb-24 max-w-6xl mx-auto w-full px-4 md:px-6">
         <header className="mb-10">
           <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">

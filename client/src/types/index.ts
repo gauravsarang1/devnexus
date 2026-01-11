@@ -37,6 +37,8 @@ export interface User {
   skills?: SkillOnUser[];
   createdAt: string;
   updatedAt: string;
+  isConnected?: boolean;
+  isCurrentUser?: boolean;
 }
 
 export interface Match {
