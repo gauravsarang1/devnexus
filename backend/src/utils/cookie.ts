@@ -12,6 +12,11 @@ export const sendRefreshToken = (res: Response, token: string) => {
 };
 
 export const clearRefreshToken = (res: Response) => {
-  // Cast res to any to access clearCookie method
-  res.clearCookie("jid", { path: "/" });
-}
+  res.cookie('jid', '', {
+    httpOnly: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    expires: new Date(0),
+  });
+};

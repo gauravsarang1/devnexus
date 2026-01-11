@@ -16,6 +16,8 @@ export interface RegisterDTO {
     password: string;
     offeredSkills?: string[];
     seekingSkills?: string[];
+    avatar?: string;
+    background?: string;
 }
 
 export interface LoginDTO {
@@ -94,8 +96,8 @@ export class authService {
             // Auto-assign Photos to prevent blank states
             await tx.photo.createMany({
                 data: [
-                    { userId: newUser.id, url: diceBearAvatar, type: 'AVATAR' },
-                    { userId: newUser.id, url: randomBanner, type: 'BACKGROUND' }
+                    { userId: newUser.id, url: data.avatar || diceBearAvatar, type: 'AVATAR' },
+                    { userId: newUser.id, url: data.background || randomBanner, type: 'BACKGROUND' }
                 ]
             });
 

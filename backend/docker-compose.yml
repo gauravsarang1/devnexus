@@ -1,0 +1,30 @@
+services:
+  api:
+    build: .
+    container_name: skillswap_api
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - redis
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6
+    container_name: skillswap_mongodb
+    command: mongod --replSet rs0 --bind_ip_all
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: skillswap_redis
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:

@@ -31,6 +31,9 @@ const App: React.FC = () => {
       const res = await dispatch(refreshAccessToken());
       if (refreshAccessToken.fulfilled.match(res)) {
         await dispatch(fetchCurrentUser());
+      } else {
+        console.error('Failed to refresh access token during app initialization');
+        navigate('/login');
       }
       setIsInitializing(false);
     };

@@ -30,11 +30,13 @@ export const registerSchema = z.object({
 
     offeredSkills: z
       .array(z.string())
-      .min(1, { message: "At least one offered skill is required" }),
+      .optional(),
 
     seekingSkills: z
-      .array(z.string())
-      .min(1, { message: "At least one seeking skill is required" }),
+      .array(z.string()).optional(),
+
+      avatar: z.string().optional(),
+      background: z.string().optional(),
   }),
 });
 

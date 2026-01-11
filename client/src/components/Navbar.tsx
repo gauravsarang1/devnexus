@@ -20,6 +20,9 @@ import {
   SocketNotificationPayload,
   SocketPresencePayload,
 } from "../types";
+import { setToken } from "../store/slices/authSlice";
+import { AppDispatch } from "../store";
+import { useDispatch } from "react-redux";
 
 interface NavbarProps {
   navigate?: (to: string) => void;
@@ -34,6 +37,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  const dispatch = useDispatch<AppDispatch>();
   // ---------- INITIAL DATA ----------
   useEffect(() => {
     const init = async () => {
@@ -103,7 +107,8 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
     setIsLoggingOut(true);
     try {
       await authService.logout();
-      navigate ? navigate("/") : (window.location.href = "/");
+      dispatch(setToken(null));
+      navigate("/")
     } finally {
       setIsLoggingOut(false);
       setIsDropdownOpen(false);

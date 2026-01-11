@@ -25,12 +25,11 @@ export const app = express();
 
 // Configure CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL!,
+  origin: ['http://localhost:3000', process.env.FRONTEND_URL!],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 
 app.use(express.json() as any);
 app.use(requestLogger as any);
