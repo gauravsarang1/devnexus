@@ -25,7 +25,7 @@ export const app = express();
 
 // Configure CORS
 app.use(cors({
-  origin: ['http://localhost:3000', process.env.FRONTEND_URL!],
+  origin: ['http://localhost:3000', 'http://localhost:4173', 'https://534zgg8z-3000.inc1.devtunnels.ms', process.env.FRONTEND_URL!],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
