@@ -14,6 +14,7 @@ import LoginPage from './src/pages/LoginPage';
 import RegisterPage from './src/pages/RegisterPage';
 import VerifyOtpPage from './src/pages/VerifyOtpPage';
 import SEO from './src/components/SEO';
+import MainLayout from './src/components/MainLayout';
 
 import ProtectedRoute from './src/components/ProtectedRoute';
 import { fetchCurrentUser, refreshAccessToken } from './src/store/slices/authSlice';
@@ -62,12 +63,16 @@ const App: React.FC = () => {
 
         {/* Protected */}
         <Route element={<ProtectedRoute navigate={navigate}/>}>
-          <Route path="/home" element={<><SEO title="Dashboard" /><HomePage navigate={navigate} /></>} />
-          <Route path="/search" element={<><SEO title="Find Partners" /><SearchPage navigate={navigate} /></>} />
-          <Route path="/matches" element={<><SEO title="My Swaps" /><MatchesPage navigate={navigate} /></>} />
+          {/* Main Layout with Navbar and Footer */}
+          <Route element={<MainLayout navigate={navigate}/>}>
+            <Route path="/home" element={<><SEO title="Dashboard" /><HomePage navigate={navigate} /></>} />
+            <Route path="/profile/:id?" element={<><SEO title="Member Profile" /><ProfilePage navigate={navigate} /></>} />
+            <Route path="/settings" element={<><SEO title="Account Settings" /><SettingsPage navigate={navigate} /></>} />
+            <Route path="/matches" element={<><SEO title="My Swaps" /><MatchesPage navigate={navigate} /></>} />
+            <Route path="/search" element={<><SEO title="Find Partners" /><SearchPage navigate={navigate} /></>} />
+          </Route>
+          {/* No Header Layout */}
           <Route path="/chat" element={<><SEO title="Workspace" /><ChatPage navigate={navigate} /></>} />
-          <Route path="/profile/:id?" element={<><SEO title="Member Profile" /><ProfilePage navigate={navigate} /></>} />
-          <Route path="/settings" element={<><SEO title="Account Settings" /><SettingsPage navigate={navigate} /></>} />
         </Route>
       </Routes>
       </SocketProvider>

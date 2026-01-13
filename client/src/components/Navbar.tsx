@@ -20,7 +20,7 @@ import {
   SocketNotificationPayload,
   SocketPresencePayload,
 } from "../types";
-import { setToken } from "../store/slices/authSlice";
+import { logout } from "../store/slices/authSlice";
 import { AppDispatch, RootState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -101,7 +101,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
     setIsLoggingOut(true);
     try {
       await authService.logout();
-      dispatch(setToken(null));
+      dispatch(logout());
       navigate("/")
     } finally {
       setIsLoggingOut(false);

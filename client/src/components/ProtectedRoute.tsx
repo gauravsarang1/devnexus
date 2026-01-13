@@ -20,18 +20,12 @@ const ProtectedRoute: React.FC<{ navigate: (to: string) => void }> = ({ navigate
 
   // 🚫 Not authenticated → redirect to login
   if (!token) {
-    navigate('/login');
+    navigate('/');
   }
 
   // ✅ Authenticated → allow route
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar navigate={navigate}/>
-      <main className="flex-grow">
-        <Outlet />
-      </main>
-      <Footer />
-    </div>
+    <Outlet />
   );
 };
 

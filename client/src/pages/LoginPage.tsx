@@ -16,7 +16,7 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
-  const [email, setEmail] = useState('');
+  const [emailORuId, setemailORuId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +25,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!emailORuId || !password) {
       toast.error('Please fill in all fields.');
       return;
     }
@@ -33,7 +33,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
     setIsLoading(true);
 
     try {
-      const response = await authService.login(email, password);
+      const response = await authService.login(emailORuId, password);
       if (response.success && response.data.accessToken) {
         dispatch(setToken(response.data.accessToken));
         toast.success('Welcome back to SkillSwap!');
@@ -88,8 +88,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
               <input
                 type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={emailORuId}
+                onChange={(e) => setemailORuId(e.target.value)}
                 placeholder="aryan@skillswap.com"
                 className="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-4 text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
               />

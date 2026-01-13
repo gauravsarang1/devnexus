@@ -180,7 +180,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
-      <main className="flex-grow Md:pt-[72px] md:pt-[88px] flex overflow-hidden">
+      <main className="flex-grow flex overflow-hidden">
         <ChatSidebar
           chats={filteredChats}
           selectedChatId={selectedChat?.id}
