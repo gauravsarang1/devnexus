@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorFallback from './src/components/ErrorBoundry';
 
-import LandingPage from './src/pages/LandingPage';
-import HomePage from './src/pages/HomePage';
-import SearchPage from './src/pages/SearchPage';
-import MatchesPage from './src/pages/MatchesPage';
-import ChatPage from './src/pages/ChatPage';
-import ProfilePage from './src/pages/ProfilePage';
-import SettingsPage from './src/pages/SettingsPage';
-import LoginPage from './src/pages/LoginPage';
-import RegisterPage from './src/pages/RegisterPage';
-import VerifyOtpPage from './src/pages/VerifyOtpPage';
+const LandingPage = lazy(() => import('./src/pages/LandingPage'));
+const HomePage = lazy(() => import('./src/pages/HomePage'));
+const SearchPage = lazy(() => import('./src/pages/SearchPage'));
+const MatchesPage = lazy(() => import('./src/pages/MatchesPage'));
+const ChatPage = lazy(() => import('./src/pages/ChatPage'));
+const ProfilePage = lazy(() => import('./src/pages/ProfilePage'));
+const SettingsPage = lazy(() => import('./src/pages/SettingsPage'));
+const LoginPage = lazy(() => import('./src/pages/LoginPage'));
+const RegisterPage = lazy(() => import('./src/pages/RegisterPage'));
+const VerifyOtpPage = lazy(() => import('./src/pages/VerifyOtpPage'));
+
 import SEO from './src/components/SEO';
 import MainLayout from './src/components/MainLayout';
 
@@ -20,6 +23,7 @@ import ProtectedRoute from './src/components/ProtectedRoute';
 import { fetchCurrentUser, refreshAccessToken } from './src/store/slices/authSlice';
 import { AppDispatch } from './src/store';
 import { SocketProvider } from './src/sockets/socketProvider';
+import AppLoader from './src/components/AppLoader';
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,7 +38,7 @@ const App: React.FC = () => {
         await dispatch(fetchCurrentUser());
       } else {
         console.error('Failed to refresh access token during app initialization');
-        navigate('/login');
+        navigate('/');
       }
       setIsInitializing(false);
     };
@@ -43,14 +47,15 @@ const App: React.FC = () => {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
+      <AppLoader />
     );
   }
 
   return (
-    <>
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error, info) => console.error(error, info)}
+    >
       <Toaster richColors position="top-center" closeButton />
 
       <SocketProvider>
@@ -76,7 +81,7 @@ const App: React.FC = () => {
         </Route>
       </Routes>
       </SocketProvider>
-    </>
+    </ErrorBoundary>
   );
 };
 

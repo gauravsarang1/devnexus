@@ -4,6 +4,9 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./src/store";
 import App from "./App";
+import "./index.css";
+import { Suspense } from "react";
+import AppLoader from "./src/components/AppLoader";
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
@@ -13,10 +16,12 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Provider store={store}>
-        <App />
-      </Provider>
-    </BrowserRouter>
+    <Suspense fallback={<AppLoader />}>
+      <BrowserRouter>
+        <Provider store={store}>
+          <App />
+        </Provider>
+      </BrowserRouter>
+    </Suspense>
   </React.StrictMode>
 );

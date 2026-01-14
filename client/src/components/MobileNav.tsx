@@ -10,7 +10,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ navigate }) => {
   const currentPath = window.location.pathname;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:hidden w-[90%] max-w-[400px]">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:hidden w-[90%] max-w-100">
       <div className="bg-slate-900 rounded-3xl p-3 flex justify-between items-center shadow-2xl border border-white/10 glass">
         <button 
           onClick={() => navigate?.('/home')}

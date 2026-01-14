@@ -7,7 +7,7 @@ import {
   LogOut,
   Settings,
   Loader2,
-  Search
+  Search,
 } from "lucide-react";
 import NotificationDrawer, { NotificationItem } from "./NotificationDrawer";
 import socket from "../sockets/socket";
@@ -23,6 +23,7 @@ import {
 import { logout } from "../store/slices/authSlice";
 import { AppDispatch, RootState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
+import { NavLink } from "react-router-dom";
 
 interface NavbarProps {
   navigate?: (to: string) => void;
@@ -37,7 +38,9 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const dispatch = useDispatch<AppDispatch>();
-  const currentUser: User | null = useSelector((state: RootState) => state.auth.user);
+  const currentUser: User | null = useSelector(
+    (state: RootState) => state.auth.user
+  );
   // ---------- INITIAL DATA ----------
   useEffect(() => {
     const init = async () => {
@@ -102,7 +105,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
     try {
       await authService.logout();
       dispatch(logout());
-      navigate("/")
+      navigate("/");
     } finally {
       setIsLoggingOut(false);
       setIsDropdownOpen(false);
@@ -113,11 +116,10 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? "py-3 glass shadow-sm border-b border-slate-100"
-            : "py-5 bg-white"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+          ? "py-3 glass shadow-sm border-b border-slate-100"
+          : "py-5 bg-white"
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center gap-4">
           {/* Logo */}
@@ -134,20 +136,47 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
             </span>
           </div>
 
-          {/* Search */}
-          <div className="hidden md:flex flex-grow max-w-xl relative">
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              readOnly
-              placeholder="Search skills, people, or projects..."
-              onClick={() => navigate?.("/search")}
-              className="w-full bg-slate-100 border-none rounded-full py-2.5 pl-12 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none cursor-pointer"
-            />
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex flex-grow justify-center">
+            <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
+              {[
+                { to: "/home", label: "Home" },
+                { to: "/search", label: "Search" },
+                { to: "/chat", label: "Chat" },
+                { to: "/matches", label: "Matches" },
+              ].map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `
+          relative px-4 py-1.5 text-sm font-medium rounded-full transition-all
+          ${isActive
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    }
+        `
+                  }
+                >
+                  {label}
+
+                  {/* Active underline */}
+                  <span
+                    className={`
+            absolute left-1/2 -bottom-1 h-[2px] w-4 -translate-x-1/2 rounded-full
+            transition-all
+            ${window.location.pathname === to
+                        ? "bg-blue-600 opacity-100"
+                        : "opacity-0"
+                      }
+          `}
+                  />
+                </NavLink>
+              ))}
+            </div>
           </div>
+
 
           {/* Actions */}
           <div className="flex items-center gap-3 sm:gap-6">
@@ -179,17 +208,15 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
                   className="w-8 h-8 rounded-full object-cover"
                   src={
                     currentUser?.avatar ||
-                    `https://picsum.photos/seed/${
-                      currentUser?.uId || "user"
+                    `https://picsum.photos/seed/${currentUser?.uId || "user"
                     }/100/100`
                   }
                 />
 
                 <ChevronDown
                   size={14}
-                  className={`text-slate-400 transition-transform ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
+                  className={`text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                    }`}
                 />
               </button>
 
@@ -255,7 +282,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
         notifications={notifications}
         setNotifications={setNotifications}
         setUnreadCount={setUnreadCount}
-        navigate={navigate || (() => {})}
+        navigate={navigate || (() => { })}
       />
     </>
   );

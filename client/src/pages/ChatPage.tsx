@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, use } from "react";
 import { Loader2, MessageSquare } from "lucide-react";
 import MobileNav from "../components/MobileNav";
 import ChatSidebar from "../components/Chat/ChatSidebar";
@@ -10,12 +10,15 @@ import { authService } from "../services/authService";
 import { useChatSocket } from "../sockets/chat/useChatSocket";
 import { toast } from "sonner";
 import { Chat, ChatMessage, User, SocketTypingPayload } from "../types";
+import { RootState } from "../store";
+import { useSelector } from "react-redux";
 
 const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
 }) => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatsPage, setChatsPage] = useState(1);
+  const [isChatLoading, setIsChatLoading] = useState(false);
   const [hasMoreChats, setHasMoreChats] = useState(false);
   const [isFetchingMoreChats, setIsFetchingMoreChats] = useState(false);
 
@@ -32,6 +35,9 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
 
+  //Current User
+  const user = useSelector((state: RootState) => state.auth.user);
+
   // Presence State
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
 
@@ -39,9 +45,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   useEffect(() => {
     const init = () => {
-      authService.me().then(res => {
-        setCurrentUser(res.data);
-      }) 
+      setCurrentUser(user ?? null);
       chatService.getChats(1, 15).then(res =>{
         setChats(res.chats ??[]);
       }).finally(() => {
@@ -69,6 +73,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
 
     setMessages([]);
     setMessagesPage(1);
+    setIsChatLoading(true);
 
     chatService.getMessages(selectedChat.id, 1, 30).then((res) => {
       setMessages(res.messages);
@@ -80,6 +85,8 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
           behavior: "auto",
         });
       });
+    }).finally(() => {
+      setIsChatLoading(false)
     });
 
     chatService.markChatAsSeen(selectedChat.id);
@@ -164,13 +171,6 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
     }
   };
 
-  if (isLoading)
-    return (
-      <div className="h-screen flex items-center justify-center bg-white">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
-      </div>
-    );
-
   const selectedPartner = selectedChat?.participants.find(
     (p) => p.id !== currentUser?.id
   );
@@ -180,7 +180,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
-      <main className="flex-grow flex overflow-hidden">
+      <main className="grow flex overflow-hidden">
         <ChatSidebar
           chats={filteredChats}
           selectedChatId={selectedChat?.id}
@@ -192,12 +192,13 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
           onLoadMore={handleLoadMoreChats}
           hasMore={hasMoreChats}
           isFetchingMore={isFetchingMoreChats}
+          isLoading={isLoading}
         />
 
         <div
           className={`${
             !selectedChat ? "hidden md:flex" : "flex"
-          } flex-grow flex-col bg-white relative h-full overflow-hidden shadow-2xl`}
+          } grow flex-col bg-white relative h-full overflow-hidden shadow-2xl`}
         >
           {selectedChat ? (
             <>
@@ -217,6 +218,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
                 hasMore={hasMoreMessages}
                 isFetchingMore={isFetchingMoreMessages}
                 onLoadMore={handleLoadMoreMessages}
+                isLoading={isChatLoading}
               />
               <MessageInput
                 text={inputText}
@@ -226,7 +228,7 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
               />
             </>
           ) : (
-            <div className="flex-grow flex flex-col items-center justify-center p-12 text-center bg-slate-50/30">
+            <div className="grow flex flex-col items-center justify-center p-12 text-center bg-slate-50/30">
               <div className="w-24 h-24 bg-white rounded-[40px] shadow-xl shadow-blue-500/5 flex items-center justify-center mb-8 border border-slate-100">
                 <MessageSquare size={40} className="text-blue-500" />
               </div>

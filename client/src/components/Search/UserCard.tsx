@@ -15,45 +15,64 @@ const UserCard: React.FC<UserCardProps> = ({
   onNavigate,
   currentUser,
 }) => {
+  const isMe = currentUser?.id === user.id;
+
   return (
-    <div className="bg-white p-6 rounded-[32px] border border-slate-100 flex flex-col sm:flex-row gap-6 hover:shadow-xl transition-all group">
+    <div className="group bg-white border border-slate-100 rounded-3xl p-4 sm:p-6 flex gap-4 sm:gap-6 hover:shadow-xl transition-all">
+      
+      {/* Avatar */}
       <div
-        className="flex-shrink-0 cursor-pointer"
         onClick={() => onNavigate(`/profile?uId=${user.uId}`)}
+        className="flex-shrink-0 cursor-pointer"
       >
         <img
           src={user.avatar || `https://picsum.photos/seed/${user.id}/100/100`}
-          className="w-20 h-20 rounded-2xl object-cover ring-4 ring-slate-50"
           alt={user.name}
+          className="
+            w-14 h-14 sm:w-20 sm:h-20
+            rounded-2xl object-cover
+            ring-2 ring-slate-50
+            group-hover:ring-blue-100 transition
+          "
         />
       </div>
-      <div className="flex-grow min-w-0">
-        <div className="flex justify-between items-start mb-4">
-          <div
-            className="cursor-pointer"
-            onClick={() => onNavigate(`/profile?uId=${user.uId}`)}
-          >
-            <h4 className="font-bold text-slate-900 flex items-center gap-1">
-              {user.name}{" "}
-              {user.isEmailVerified && (
-                <CheckCircle2 size={14} className="text-blue-500" />
-              )}
-            </h4>
-            <p className="text-xs text-slate-500 truncate">
-              {user.bio || "SkillSwap Member"}
-            </p>
-          </div>
+
+      {/* Content */}
+      <div className="flex-grow min-w-0 flex flex-col justify-between">
+        
+        {/* Name + bio */}
+        <div
+          className="cursor-pointer"
+          onClick={() => onNavigate(`/profile?uId=${user.uId}`)}
+        >
+          <h4 className="font-bold text-slate-900 flex items-center gap-1 text-sm sm:text-base truncate">
+            {user.name}
+            {user.isEmailVerified && (
+              <CheckCircle2 size={14} className="text-blue-500 flex-shrink-0" />
+            )}
+          </h4>
+          <p className="text-xs sm:text-sm text-slate-500 truncate mt-0.5">
+            {user.bio || "SkillSwap Member"}
+          </p>
         </div>
 
+        {/* Skills */}
         {user.skills && (
-          <div className="flex flex-wrap gap-1 mb-4">
+          <div className="flex flex-wrap gap-1.5 mt-3">
             {user.skills
               .filter((s) => s.role === "TEACH" || s.role === "LEARN")
               .slice(0, 2)
               .map((s) => (
                 <span
                   key={s.id}
-                  className="text-[10px] font-bold px-2 py-0.5 bg-green-50 text-green-600 rounded-md border border-green-100"
+                  className="
+                    text-[10px] sm:text-[11px]
+                    font-bold px-2 py-0.5
+                    rounded-md
+                    bg-gradient-to-r from-green-50 to-blue-50
+                    text-slate-700
+                    border border-slate-100
+                  "
                 >
                   {s.skill.name}
                 </span>
@@ -61,31 +80,41 @@ const UserCard: React.FC<UserCardProps> = ({
           </div>
         )}
 
-        <div className="flex gap-2">
-          {currentUser && currentUser.id === user.id ? (
-            //show user to it is his own profile
-            <div className="flex-grow">
-              <span className="px-4 py-2.5 bg-slate-200 text-slate-500 rounded-xl font-bold text-sm shadow-inner select-none w-full block text-center">
-                This is you
-              </span>
-            </div>
+        {/* Actions */}
+        <div className="flex gap-2 mt-4">
+          {isMe ? (
+            <span className="flex-grow py-2 text-center text-xs sm:text-sm font-bold rounded-xl bg-slate-100 text-slate-500">
+              This is you
+            </span>
           ) : user.isConnected ? (
-            <div className="flex-grow">
-              <span className="px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-sm shadow-inner select-none w-full block text-center">
-                Connected
-              </span>
-            </div>
+            <span className="flex-grow py-2 text-center text-xs sm:text-sm font-bold rounded-xl bg-green-50 text-green-600">
+              Connected
+            </span>
           ) : (
             <button
               onClick={() => onConnect(user.id)}
-              className="flex-grow px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
+              className="
+                flex-grow py-2
+                text-xs sm:text-sm font-bold
+                rounded-xl
+                bg-blue-600 text-white
+                hover:bg-blue-700
+                transition
+              "
             >
               Connect
             </button>
           )}
+
           <button
             onClick={() => onNavigate(`/profile?uId=${user.uId}`)}
-            className="p-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200"
+            className="
+              w-9 h-9 sm:w-10 sm:h-10
+              flex items-center justify-center
+              rounded-xl
+              bg-slate-100 text-slate-500
+              hover:bg-slate-200 transition
+            "
           >
             <UserIcon className="w-4 h-4" />
           </button>

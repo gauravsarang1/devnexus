@@ -1,11 +1,12 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
-import { 
+import {
   X, Bell, MessageSquare, UserPlus, CheckCircle2, Sparkles, Clock, Info, Loader2, Star
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { notificationService } from '../services/notificationService';
+import NotificationDrawerSkeleton from './skeleton/NotificationDrawerSkeleton';
 
 const motion = m as any;
 
@@ -30,18 +31,18 @@ interface NotificationDrawerProps {
   navigate: (to: string) => void;
 }
 
-const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ 
-  isOpen, onClose, notifications, setNotifications, setUnreadCount, navigate 
+const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
+  isOpen, onClose, notifications, setNotifications, setUnreadCount, navigate
 }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
-  
+
   const observer = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useCallback((node: HTMLDivElement | null) => {
     if (isFetching || !isOpen) return;
     if (observer.current) observer.current.disconnect();
-    
+
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
         handleLoadMore();
@@ -53,8 +54,8 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
   // Reset pagination when drawer opens
   useEffect(() => {
     if (isOpen) {
-       setPage(1);
-       setHasMore(true);
+      setPage(1);
+      setHasMore(true);
     }
   }, [isOpen]);
 
@@ -64,16 +65,16 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     try {
       const nextPage = page + 1;
       const res = await notificationService.getNotifications(nextPage, 15);
-      
+
       // Filter out notifications we already have from real-time updates
       const newItems = res.notifications.filter(
         n => !notifications.some(existing => existing.id === n.id)
       );
-      
+
       setNotifications(prev => [...prev, ...newItems]);
       setHasMore(res.pagination.hasNextPage);
       setPage(nextPage);
-    } catch (err) { console.error(err); } 
+    } catch (err) { console.error(err); }
     finally { setIsFetching(false); }
   };
 
@@ -90,7 +91,7 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     if (!notification.isRead) {
       try {
         await notificationService.markRead(notification.id);
-        setNotifications(prev => prev.map(n => 
+        setNotifications(prev => prev.map(n =>
           n.id === notification.id ? { ...n, isRead: true } : n
         ));
         setUnreadCount(prev => Math.max(0, prev - 1));
@@ -117,8 +118,8 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
     const now = new Date();
     const diff = now.getTime() - d.getTime();
     if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff/60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff/3600000)}h ago`;
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return d.toLocaleDateString();
   };
 
@@ -130,56 +131,120 @@ const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60]" />
-          <motion.div variants={drawerVariants} initial="hidden" animate="visible" exit="exit" className="fixed right-0 top-0 bottom-0 w-full md:w-96 bg-white shadow-2xl z-[70] flex flex-col overflow-hidden">
-            
-            <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between">
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Notifications</h2>
-              <div className="flex items-center gap-2">
-                <button onClick={markAllRead} className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-50 px-2 py-1 rounded-lg">Mark all read</button>
-                <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900"><X size={20} /></button>
-              </div>
-            </div>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60]"
+            />
 
-            <div className="flex-grow overflow-y-auto px-3 py-4 space-y-2 custom-scrollbar">
-              {notifications.length > 0 ? (
-                <>
-                  {notifications.map((notif, i) => (
-                    <motion.div
-                      key={notif.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i < 15 ? i * 0.05 : 0 }}
-                      onClick={() => handleNotificationClick(notif)}
-                      className={`group p-4 rounded-[24px] cursor-pointer transition-all flex gap-4 border border-transparent ${notif.isRead ? 'hover:bg-slate-50' : 'bg-blue-50/40 border-blue-100/50'}`}
-                    >
-                      <div className="w-11 h-11 bg-white rounded-2xl flex-shrink-0 flex items-center justify-center shadow-sm">{getIcon(notif.type)}</div>
-                      <div className="flex-grow min-w-0">
-                        <div className="flex justify-between items-start mb-1 gap-2">
-                          <h4 className={`text-sm truncate ${notif.isRead ? 'text-slate-600 font-bold' : 'text-slate-900 font-black'}`}>{notif.title}</h4>
-                          <span className="text-[10px] text-slate-400 whitespace-nowrap">{formatTime(notif.createdAt)}</span>
-                        </div>
-                        <p className={`text-xs line-clamp-2 ${notif.isRead ? 'text-slate-400' : 'text-slate-500 font-medium'}`}>{notif.message}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                  <div ref={lastElementRef} className="h-10 flex items-center justify-center">
-                    {isFetching && <Loader2 className="animate-spin text-blue-600" size={20} />}
-                    {!hasMore && notifications.length > 0 && <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">End of history</p>}
-                  </div>
-                </>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
-                  <Bell size={48} className="text-slate-200 mb-4" />
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Inbox is clear</p>
+            {/* Drawer */}
+            <motion.div
+              variants={drawerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="fixed right-0 top-0 bottom-0 w-full md:w-96 bg-white shadow-2xl z-[70] flex flex-col overflow-hidden"
+            >
+              {/* HEADER */}
+              <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between">
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                  Notifications
+                </h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={markAllRead}
+                    className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-50 px-2 py-1 rounded-lg"
+                  >
+                    Mark all read
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="p-2 text-slate-400 hover:text-slate-900"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
-              )}
-            </div>
-          </motion.div>
-        </>
-      )}
+              </div>
+
+              {/* CONTENT */}
+              <div className="flex-grow overflow-y-auto px-3 py-4 custom-scrollbar">
+                {isFetching && notifications.length === 0 ? (
+                  <NotificationDrawerSkeleton />
+                ) : notifications.length > 0 ? (
+                  <>
+                    {notifications.map((notif, i) => (
+                      <motion.div
+                        key={notif.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i < 15 ? i * 0.05 : 0 }}
+                        onClick={() => handleNotificationClick(notif)}
+                        className={`group p-4 rounded-[24px] cursor-pointer transition-all flex gap-4 border border-transparent ${notif.isRead
+                            ? "hover:bg-slate-50"
+                            : "bg-blue-50/40 border-blue-100/50"
+                          }`}
+                      >
+                        <div className="w-11 h-11 bg-white rounded-2xl flex-shrink-0 flex items-center justify-center shadow-sm">
+                          {getIcon(notif.type)}
+                        </div>
+
+                        <div className="flex-grow min-w-0">
+                          <div className="flex justify-between items-start mb-1 gap-2">
+                            <h4
+                              className={`text-sm truncate ${notif.isRead
+                                  ? "text-slate-600 font-bold"
+                                  : "text-slate-900 font-black"
+                                }`}
+                            >
+                              {notif.title}
+                            </h4>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                              {formatTime(notif.createdAt)}
+                            </span>
+                          </div>
+                          <p
+                            className={`text-xs line-clamp-2 ${notif.isRead
+                                ? "text-slate-400"
+                                : "text-slate-500 font-medium"
+                              }`}
+                          >
+                            {notif.message}
+                          </p>
+                        </div>
+                      </motion.div>
+                    ))}
+
+                    <div ref={lastElementRef} className="h-10 flex items-center justify-center">
+                      {isFetching && (
+                        <Loader2 className="animate-spin text-blue-600" size={20} />
+                      )}
+                      {!hasMore && (
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                          End of history
+                        </p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                    <Bell size={48} className="text-slate-200 mb-4" />
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                      Inbox is clear
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </AnimatePresence>
   );
 };

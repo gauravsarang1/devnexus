@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Chat, User } from "../../types";
+import ChatSidebarSkeleton from "../skeleton/ChatSidebarSkeleton";
 
 interface ChatSidebarProps {
   chats: Chat[];
@@ -19,6 +20,7 @@ interface ChatSidebarProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isFetchingMore?: boolean;
+  isLoading: boolean;
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -32,6 +34,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onLoadMore,
   hasMore,
   isFetchingMore,
+  isLoading,
 }) => {
   const observer = useRef<IntersectionObserver | null>(null);
   const lastChatRef = useCallback(
@@ -53,11 +56,15 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const getPartner = (chat: any) =>
     chat.participants.find((p) => p.id !== currentUser?.id);
 
+  if (isLoading) {
+    return <ChatSidebarSkeleton />;
+  }
+
   return (
     <div
       className={`${
         selectedChatId ? "hidden md:flex" : "flex"
-      } w-full lg:w-[380px] flex-col border-r border-slate-100 bg-white`}
+      } w-full lg:w-95 flex-col border-r border-slate-100 bg-white`}
     >
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
@@ -88,7 +95,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto px-2 pb-6 custom-scrollbar">
+      <div className="grow overflow-y-auto px-2 pb-6 custom-scrollbar">
         {chats.length > 0 ? (
           <div className="space-y-1">
             {chats.map((chat, idx) => {
@@ -103,13 +110,13 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   key={chat.id}
                   ref={isLast ? lastChatRef : null}
                   onClick={() => onSelectChat(chat)}
-                  className={`w-full flex items-center gap-4 p-4 rounded-[24px] transition-all relative group ${
+                  className={`w-full flex items-center gap-4 p-4 rounded-3xl transition-all relative group ${
                     isSelected
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                       : "hover:bg-slate-50 text-slate-900"
                   }`}
                 >
-                  <div className="relative flex-shrink-0">
+                  <div className="relative shrink-0">
                     <img
                       src={
                         partner?.avatar ||
@@ -132,7 +139,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       }`}
                     ></div>
                   </div>
-                  <div className="flex-grow text-left min-w-0">
+                  <div className="grow text-left min-w-0">
                     <div className="flex justify-between items-center mb-1">
                       <h4
                         className={`font-bold truncate ${
@@ -175,8 +182,8 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
             )}
           </div>
         ) : (
-          <div className="h-[400px] flex flex-col items-center justify-center opacity-40 px-8 text-center">
-            <div className="w-20 h-20 bg-slate-50 rounded-[32px] flex items-center justify-center mb-6">
+          <div className="h-100 flex flex-col items-center justify-center opacity-40 px-8 text-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-4xl flex items-center justify-center mb-6">
               <UserIcon size={40} className="text-slate-300" />
             </div>
             <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">

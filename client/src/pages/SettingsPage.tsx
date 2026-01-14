@@ -9,6 +9,9 @@ import NotificationsPane from "../components/Settings/NotificationsPane";
 import { authService } from "../services/authService";
 import { userService } from "../services/userService";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
+import SettingSkeleton from "../components/skeleton/SettingSkeleton";
 
 const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
@@ -23,6 +26,10 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
     uId: "",
     email: "",
   });
+  const { user, isLoading: authLoading } = useSelector(
+    (state: RootState) => state.auth
+  );
+
   const [notifs, setNotifs] = useState({
     email: true,
     push: Notification.permission === "granted",
@@ -30,20 +37,32 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
   });
 
   useEffect(() => {
-    authService.me().then((res) => {
-      if (res.success && res.data) {
-        setAccountData({
-          name: res.data.name,
-          uId: res.data.uId,
-          email: res.data.email,
-        });
+    const loadSettings = async () => {
+      setIsLoading(true);
+      try {
+        // Load account data
+        if (user) {
+          setAccountData({
+            name: user.name,
+            uId: user.uId,
+            email: user.email,
+          });
+        }
+
         setNotifs((prev) => ({
           ...prev,
           push: Notification.permission === "granted",
         }));
+      } catch (err) {
+        toast.error("Failed to load settings");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    if (!authLoading) {
+      loadSettings();
+    }
   }, []);
 
   const handleUpdateAccount = async (e: React.FormEvent) => {
@@ -152,12 +171,11 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
     }
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" size={40} />
-      </div>
+      <SettingSkeleton />
     );
+  }
 
   const tabs = [
     { id: "Account", icon: <UserIcon size={18} />, desc: "Personal info" },
@@ -210,7 +228,7 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
                     })
                   }
                   onPushActivate={handlePushToggle}
-                  onPushTest={() => { }}
+                  onPushTest={() => {}}
                   isSaving={isSaving}
                 />
               )}
