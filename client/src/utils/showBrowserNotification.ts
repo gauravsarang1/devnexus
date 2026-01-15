@@ -17,7 +17,7 @@ const showBrowserNotification = (
         navigator.serviceWorker.ready.then((reg) =>
             reg.showNotification(title, {
                 body: message,
-                icon: "/icon.png",
+                icon: "./favicon-96x96.png",
                 data: { link },
             })
         );

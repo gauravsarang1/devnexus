@@ -6,6 +6,9 @@ import { matchService } from "../services/matchService";
 import { Match } from "../types";
 import { toast } from "sonner";
 import MatchesSkeleton from "../components/skeleton/MatchesSkeleton";
+import { log } from "console";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 
 const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
@@ -18,6 +21,9 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+
+  //Current User
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -42,6 +48,7 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
 
     try {
       const res = await matchService.getMatches(activeTab, pageNum, 10);
+      console.log("Fetched matches:", res.matches);
       setMatches((prev) =>
         pageNum === 1 ? res.matches : [...prev, ...res.matches]
       );
@@ -127,6 +134,7 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
                     activeTab={activeTab}
                     onStatusUpdate={handleUpdateStatus}
                     onNavigate={navigate}
+                    currentUser={user!}
                   />
                 ))
               ) : (
