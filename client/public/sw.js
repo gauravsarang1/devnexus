@@ -23,8 +23,8 @@ self.addEventListener("push", (event) => {
 
   const options = {
     body: data.message,
-    icon: "/icons/icon-192.png",
-    badge: "/icons/badge-72.png",
+    icon: "./favicon-96x96.png",
+    badge: "./favicon-96x96.png",
     tag: "skillswap-notification",
     renotify: true,
     data: {
