@@ -1,11 +1,12 @@
 import React from 'react';
 import { CheckCircle2, Zap, UserCheck, UserX, MessageSquare, ArrowUpRight, Clock, X } from 'lucide-react';
 // Fixed: Import Match from global types
-import { Match } from '../../types';
+import { Match, User } from '../../types';
 
 interface MatchCardProps {
   match: Match;
   activeTab: 'Incoming' | 'Sent' | 'Active';
+  currentUser: User;
   // Fixed: Changed REJECTED to DECLINED
   onStatusUpdate: (id: string, status: 'ACCEPTED' | 'DECLINED') => void;
   onNavigate: (path: string) => void;
@@ -15,8 +16,8 @@ interface MatchCardProps {
  * MatchCard component to display individual swap requests or active matches.
  * Handles different UI states based on the active tab (Incoming, Sent, Active).
  */
-const MatchCard: React.FC<MatchCardProps> = ({ match, activeTab, onStatusUpdate, onNavigate }) => {
-  const otherUser = activeTab === 'Incoming' ? match.userA : match.userB;
+const MatchCard: React.FC<MatchCardProps> = ({ match, activeTab, onStatusUpdate, onNavigate, currentUser }) => {
+  const otherUser = match.userAId === currentUser.id ? match.userB : match.userA;
   if (!otherUser) return null;
 
   return (
