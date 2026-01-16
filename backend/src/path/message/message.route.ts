@@ -7,28 +7,13 @@ import { requireAuth } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 
-// Create a new message
 router.post('/', requireAuth, validate(MessageValidation.createMessage),  messageController.sendMessage);
-
-//get All messages
 router.get('/', messageController.getAllMessages)
-
-// Get messages for a chat with pagination
-router.get('/chat/:chatId', validate(MessageValidation.getMessagesByChatId),  messageController.getMessagesByChatId);
-
-// Delete a message by ID
+router.get('/chat/:chatId', requireAuth,validate(MessageValidation.getMessagesByChatId),  messageController.getMessagesByChatId);
 router.delete('/:messageId', requireAuth, validate(MessageValidation.deleteMessage), messageController.deleteMessage);
-
-// Edit a message by ID
 router.put('/:messageId', requireAuth, validate(MessageValidation.editMessage), messageController.editMessage);
-
-// seenBy
 router.post('/:messageId/seenBy',requireAuth, validate(MessageValidation.seenByMessage), messageController.seenBy);
-
-// mark whole chat as seen
-router.post('/chat/:chatId/seen', requireAuth, messageController.markChatAsSeen);
-
-//status
+router.post('/chat/:chatId/seen', requireAuth, validate(MessageValidation.markChatAsSeen), messageController.markChatAsSeen);
 router.put('/:messageId/change-status', requireAuth, validate(MessageValidation.changeMessageStatus), messageController.changeMessageStatus)
 
 export default router;

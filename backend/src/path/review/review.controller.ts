@@ -12,13 +12,8 @@ export const reviewController = {
             const reviewerId = (req as any).userId!;
             const body = (req as any).validated!.body!;
 
-            const response = await ReviewService.createReview(body);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to create review", 500);
-            }
-
-            return successResponse(res, response.data, "Review created successfully");
+            const data = await ReviewService.createReview(body);
+            return successResponse(res, data, "Review created successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
             (next as any)(error);
@@ -31,13 +26,8 @@ export const reviewController = {
             // Cast req to any to access custom validated property
             const query = (req as any).validated!.query!
 
-            const response = await ReviewService.getReviews(query);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to fetch reviews", 500);
-            }
-
-            return successResponse(res, response.data, "Reviews fetched successfully");
+            const data = await ReviewService.getReviews(query);
+            return successResponse(res, data, "Reviews fetched successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
             (next as any)(error);
@@ -50,13 +40,8 @@ export const reviewController = {
             // Cast req to any to access custom validated property
             const { reviewId } = (req as any).validated!.params!;
 
-            const response = await ReviewService.getReviewById(reviewId);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to fetch review", 500);
-            }
-
-            return successResponse(res, response.data, "Review fetched successfully");
+            const data = await ReviewService.getReviewById(reviewId);
+            return successResponse(res, data, "Review fetched successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
             (next as any)(error);
@@ -70,13 +55,8 @@ export const reviewController = {
             const { reviewerId } = (req as any).validated!.params!;
             const query = (req as any).validated!.query!;
 
-            const response = await ReviewService.getReviewsByReviewerId(reviewerId, query);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to fetch reviewer reviews", 500);
-            }
-
-            return successResponse(res, response.data, "Reviews fetched successfully");
+            const data = await ReviewService.getReviewsByReviewerId(reviewerId, query);
+            return successResponse(res, data, "Reviews fetched successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
             (next as any)(error);
@@ -90,13 +70,8 @@ export const reviewController = {
             const { reviewedUserId } = (req as any).params;
             const query = (req as any).validated!.query!;
 
-            const response = await ReviewService.getReviewsByReviewedUserId(reviewedUserId, query);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to fetch user reviews", 500);
-            }
-
-            return successResponse(res, response.data, "Reviews fetched successfully");
+            const data = await ReviewService.getReviewsByReviewedUserId(reviewedUserId, query);
+            return successResponse(res, data, "Reviews fetched successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
             (next as any)(error);
@@ -112,13 +87,8 @@ export const reviewController = {
             const { reviewId } = (req as any).validated!.params!;
             const data = (req as any).validated!.body!;
 
-            const response = await ReviewService.editReview(reviewId,reviewerId, data);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to edit review", 500);
-            }
-
-            return successResponse(res, response.data, "Review updated successfully");
+            const result = await ReviewService.editReview(reviewId,reviewerId, data);
+            return successResponse(res, result, "Review updated successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
             (next as any)(error);
@@ -133,12 +103,7 @@ export const reviewController = {
 
             const { reviewId } = (req as any).validated!.params!;
 
-            const response = await ReviewService.deleteReview(reviewId, currentUser);
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Failed to delete review", 500);
-            }
-
+            await ReviewService.deleteReview(reviewId, currentUser);
             return successResponse(res, null, "Review deleted successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error

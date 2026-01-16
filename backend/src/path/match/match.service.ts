@@ -1,11 +1,18 @@
 
 import prisma from '../../config/prisma.js';
-import { ServiceResponse } from '../../types/serviceResponse.js';
+import { BadRequestError } from '../../errors/BadRequestError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 import { getCache, invalidateMatchCache, setCache } from '../../utils/cache.js';
 import { MatchNotifier } from './match.notifications.js';
+import {
+    AllMatchesResponse,
+    MatchResponse,
+    UpdateMatchStatusDTO,
+    MatchDTO,
+} from '../../types/service.types.js';
 
 export class MatchService {
-    static async getAllMatches(userId: string, type: string, params: any = {}): Promise<ServiceResponse> {
+    static async getAllMatches(userId: string, type: string, params: any = {}): Promise<AllMatchesResponse> {
         const page = Number(params.page) || 1;
         const limit = Number(params.limit) || 10;
         const skip = (page - 1) * limit;
@@ -21,7 +28,7 @@ export class MatchService {
         } else if (type === 'active') {
             where = {
                 OR: [{ userAId: userId }, { userBId: userId }],
-                status: 'ACCEPTED'
+                status: 'ACCEPTED',
             };
         } else {
             where = { OR: [{ userAId: userId }, { userBId: userId }] };
@@ -30,10 +37,7 @@ export class MatchService {
         const cachedMatches = await getCache(cacheKey);
         if (cachedMatches) {
             console.log("match response from cache")
-            return {
-                success: true,
-                data: JSON.parse(cachedMatches)
-            }
+            return JSON.parse(cachedMatches);
         }
 
         const [matches, total] = await Promise.all([
@@ -77,14 +81,11 @@ export class MatchService {
 
         await setCache(cacheKey, formatedResponse, 180);
 
-        return {
-            success: true,
-            data: formatedResponse
-        };
+        return formatedResponse;
     }
 
-    static async sendMatchRequest(senderId: string, targetUserId: string): Promise<ServiceResponse> {
-        if (senderId === targetUserId) return { success: false, error: "You cannot match with yourself" };
+    static async sendMatchRequest(senderId: string, targetUserId: string): Promise<MatchDTO> {
+        if (senderId === targetUserId) throw new BadRequestError("You cannot match with yourself");
 
         const existing = await prisma.match.findFirst({
             where: {
@@ -95,7 +96,7 @@ export class MatchService {
             }
         });
 
-        if (existing) return { success: false, error: "Connection already exists or is pending" };
+        if (existing) throw new BadRequestError("Connection already exists or is pending");
 
         const sender = await prisma.user.findUnique({ where: { id: senderId }, select: { name: true } });
 
@@ -128,10 +129,10 @@ export class MatchService {
         await invalidateMatchCache(senderId, match.id);
         await invalidateMatchCache(targetUserId, match.id);
 
-        return { success: true, data: match };
+        return match;
     }
 
-    static async updateMatchStatus(userId: string, matchId: string, status: 'ACCEPTED' | 'DECLINED'): Promise<ServiceResponse> {
+    static async updateMatchStatus(userId: string, matchId: string, status: 'ACCEPTED' | 'DECLINED'): Promise<any> {
         const match = await prisma.match.findUnique({
             where: { id: matchId },
             include: {
@@ -139,18 +140,19 @@ export class MatchService {
                 userA: { select: { id: true, name: true, email: true } }
             }
         });
-        if (!match || match.userBId !== userId) return { success: false, error: "Unauthorized or record not found" };
+        if (!match) throw new NotFoundError("Match not found");
         if (match.status !== 'PENDING') {
-            return { success: false, error: 'Match already processed' };
+            throw new BadRequestError("Match request already responded to");
         }
 
         const result = await prisma.$transaction(async (tx) => {
             if (status === 'DECLINED') {
+                if (match.userAId !== userId && match.userBId !== userId) {
+                    throw new BadRequestError("Unauthorized action");
+                }
                 const deleteMatch = await tx.match.delete({
-                    where: {
-                        id: matchId
-                    }
-                })
+                    where: { id: matchId }
+                });
 
                 return deleteMatch;
             }
@@ -161,6 +163,10 @@ export class MatchService {
             });
 
             if (status === 'ACCEPTED') {
+                if (match.userBId !== userId) {
+                    throw new BadRequestError("Unauthorized action");
+                }
+
                 const participants = [match.userAId, match.userBId];
 
                 const existingChat = await tx.chat.findFirst({
@@ -197,24 +203,27 @@ export class MatchService {
         await invalidateMatchCache(userId, matchId);
         await invalidateMatchCache(match.userBId, matchId);
 
-        return { success: true, data: result };
+        return result;
     }
 
-    static async getMatchById(matchId: string): Promise<ServiceResponse> {
+    static async getMatchById(matchId: string): Promise<Omit<MatchResponse, 'SkillOnUser'>> {
         const cacheKey = `match:data:${matchId}`;
         const cachedMatch = await getCache(cacheKey);
         if (cachedMatch) {
-            return {
-                success: true,
-                data: JSON.parse(cachedMatch)
-            }
+            return JSON.parse(cachedMatch);
         }
         const match = await prisma.match.findUnique({
             where: { id: matchId },
             include: { userA: true, userB: true, skills: { include: { skill: true } } }
         });
-        if (!match) return { success: false, error: "Match not found" };
-        await setCache(cacheKey, match, 500);
-        return { success: true, data: match };
+        if (!match) throw new NotFoundError("Match not found");
+
+        const formattedMatch = {
+            ...match,
+            matchedSkills: match.skills.map((ms: any) => ms.skill.name)
+        };
+
+        await setCache(cacheKey, formattedMatch, 500);
+        return formattedMatch as Omit<MatchResponse, 'SkillOnUser'>;
     }
 }

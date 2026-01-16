@@ -11,7 +11,6 @@ const router = Router();
 router.post("/register", validate(registerSchema), authController.register);
 router.post("/login", validate(loginSchema), authController.login);
 router.get("/me", requireAuth, authController.me);
-router.get("/check-availability", authController.checkAvailability);
 router.post("/refresh", authController.refreshToken);
 router.post("/logout", authController.logout);
 router.post("/verify-email-otp", validate(verifyEmailOtpSchema), authController.verifyEmailOtp);

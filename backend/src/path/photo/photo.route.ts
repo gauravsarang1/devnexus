@@ -6,23 +6,14 @@ import { requireAuth } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 
-// ----------------------
-// Avatar Routes
-// ----------------------
 router.post('/avatar',requireAuth, validate(PhotoValidation.createPhoto), photoController.createAvatar);
 router.put('/avatar',requireAuth, validate(PhotoValidation.updatePhoto), photoController.editAvatar);
 router.delete('/avatar',requireAuth, validate(PhotoValidation.deletePhoto), photoController.deleteAvatar);
 
-// ----------------------
-// Background Routes
-// ----------------------
 router.post('/background', requireAuth, validate(PhotoValidation.createPhoto), photoController.createBackground);
 router.put('/background', requireAuth, validate(PhotoValidation.updatePhoto), photoController.editBackground);
 router.delete('/background', requireAuth, validate(PhotoValidation.deletePhoto), photoController.deleteBackground);
 
-// ----------------------
-// Generic Photo Routes
-// ----------------------
 router.get('/', photoController.getPhotos);
 router.get('/:id', validate(PhotoValidation.getPhotoById), photoController.getPhotoById);
 

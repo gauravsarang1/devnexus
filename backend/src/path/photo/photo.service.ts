@@ -1,15 +1,10 @@
 
 import prisma from '../../config/prisma.js';
-import { ServiceResponse } from '../../types/serviceResponse.js';
-
-export interface CreatePhotoDTO {
-    url: string;
-    userId: string;
-    type: 'AVATAR' | 'BACKGROUND' | 'POST';
-}
+// Service methods return raw data or throw errors; controllers handle HTTP responses
+import { UploadPhotoDTO, Photo } from '../../types/service.types.js';
 
 export class PhotoService {
-    static async createPhoto(data: CreatePhotoDTO): Promise<ServiceResponse> {
+    static async createPhoto(data: UploadPhotoDTO & { userId: string }): Promise<Photo> {
         // Correctly use the compound unique key defined in schema.prisma
         const photo = await prisma.photo.upsert({
             where: {
@@ -22,10 +17,10 @@ export class PhotoService {
             create: data
         });
 
-        return { success: true, data: photo };
+        return photo;
     }
 
-    static async updatePhoto(data: Partial<CreatePhotoDTO> & { userId: string; type: any }): Promise<ServiceResponse> {
+    static async updatePhoto(data: Partial<UploadPhotoDTO> & { userId: string; type: any }): Promise<Photo> {
         const photo = await prisma.photo.update({
             where: {
                 userId_type: {
@@ -36,10 +31,10 @@ export class PhotoService {
             data: { url: data.url }
         });
 
-        return { success: true, data: photo };
+        return photo;
     }
 
-    static async deletePhoto(userId: string, type: any): Promise<ServiceResponse> {
+    static async deletePhoto(userId: string, type: any): Promise<null> {
         const photo = await prisma.photo.delete({
             where: {
                 userId_type: {
@@ -49,16 +44,16 @@ export class PhotoService {
             }
         });
 
-        return { success: true, data: photo };
+        return null;
     }
 
-    static async getPhotos(): Promise<ServiceResponse> {
+    static async getPhotos(): Promise<any> {
         const photos = await prisma.photo.findMany();
-        return { success: true, data: photos };
+        return photos;
     }
 
-    static async getPhotoById(id: string): Promise<ServiceResponse> {
+    static async getPhotoById(id: string): Promise<Photo | null> {
         const photo = await prisma.photo.findUnique({ where: { id } });
-        return { success: true, data: photo };
+        return photo;
     }
 }

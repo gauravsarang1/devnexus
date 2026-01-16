@@ -1,16 +1,23 @@
 
 import prisma from '../../config/prisma.js'
-import { ServiceResponse } from '../../types/serviceResponse.js'
-import * as PrismaModule from '@prisma/client'
+import { BadRequestError } from '../../errors/BadRequestError.js'
+import { NotFoundError } from '../../errors/NotFoundError.js'
 import io from '../../sockets/socketHandlers.js'
-import { PushService } from '../../services/pushService.js';
-import { NotificationService } from '../notification/notification.service.js';
 import { MessageNotifier } from './message.notification.js';
+import {
+  SendMessageDTO,
+  MessageResponse,
+  MessageSocketPayload,
+  GetMessagesResponse,
+  EditMessageDTO,
+  SeenByDTO,
+  MarkChatAsSeenDTO,
+} from '../../types/service.types.js';
 
 export class MessageService {
     static async sendMessage(payload: {
         chatId: string, senderId: string, text: string
-    }): Promise<ServiceResponse> {
+    }): Promise<MessageSocketPayload> {
         const existingChat = await prisma.chat.findUnique({
             where: {
                 id: payload.chatId
@@ -25,18 +32,12 @@ export class MessageService {
         });
 
         if (!existingChat) {
-            return {
-                success: false,
-                error: "Chat does not exist"
-            };
+            throw new NotFoundError("Chat does not exist");
         }
 
         const isUserExistsInChat = existingChat.participants.some( p => p.userId === payload.senderId);
         if(!isUserExistsInChat) {
-            return {
-                success: false,
-                error: "Unauthorized: You are not a participant of this chat"
-            }
+            throw new BadRequestError("Unauthorized: You are not a participant of this chat");
         }
 
         const message = await prisma.message.create({
@@ -74,12 +75,12 @@ export class MessageService {
             socketPayload
         });
 
-        return { success: true, data: socketPayload };
+        return socketPayload;
     };
 
-    static async getMessagesByChatId(payload: { chatId: string, page?: number, limit?: number }): Promise<ServiceResponse> {
-        const page = Number(payload.page) || 1;
-        const limit = Number(payload.limit) || 30;
+    static async getMessagesByChatId(payload: { chatId: string, query?: any }): Promise<GetMessagesResponse> {
+        const page = Number(payload.query?.page) || 1;
+        const limit = Number(payload.query?.limit) || 30;
         const skip = (page - 1) * limit;
 
         const [messages, total] = await Promise.all([
@@ -103,30 +104,27 @@ export class MessageService {
         }));
 
         return {
-            success: true,
-            data: {
                 messages: formatted.reverse(),
                 pagination: { total, page, limit, hasNextPage }
-            }
         };
     };
 
     // Fixed: Added implementation for deleteMessage
-    static async deleteMessage(payload: { messageId: string, userId: string }): Promise<ServiceResponse> {
+    static async deleteMessage(payload: { messageId: string, userId: string }): Promise<{ id: string }> {
         const message = await prisma.message.findUnique({ where: { id: payload.messageId } });
-        if (!message) return { success: false, error: "Message not found" };
-        if (message.senderId !== payload.userId) return { success: false, error: "Unauthorized" };
+        if (!message) throw new NotFoundError("Message not found");
+        if (message.senderId !== payload.userId) throw new BadRequestError("Unauthorized");
 
         await prisma.message.delete({ where: { id: payload.messageId } });
         io.to(message.chatId).emit('message:delete', { id: payload.messageId, chatId: message.chatId });
-        return { success: true, data: { id: payload.messageId } };
+        return { id: payload.messageId };
     }
 
     // Fixed: Added implementation for editMessage
-    static async editMessage(payload: { messageId: string, newText: string, userId: string }): Promise<ServiceResponse> {
+    static async editMessage(payload: { messageId: string, newText: string, userId: string }): Promise<MessageResponse> {
         const message = await prisma.message.findUnique({ where: { id: payload.messageId } });
-        if (!message) return { success: false, error: "Message not found" };
-        if (message.senderId !== payload.userId) return { success: false, error: "Unauthorized" };
+        if (!message) throw new NotFoundError("Message not found");
+        if (message.senderId !== payload.userId) throw new BadRequestError("Unauthorized");
 
         const updated = await prisma.message.update({
             where: { id: payload.messageId },
@@ -140,29 +138,29 @@ export class MessageService {
         };
 
         io.to(message.chatId).emit('message:edit', socketPayload as any);
-        return { success: true, data: socketPayload };
+        return socketPayload ;
     }
 
-    static async changeMessageStatus(payload: { messageId: string, status: any }): Promise<ServiceResponse> {
+    static async changeMessageStatus(payload: { messageId: string, status: any }): Promise<MessageResponse> {
         const message = await prisma.message.update({
             where: { id: payload.messageId },
             data: { status: payload.status },
         });
 
         io.to(message.chatId).emit('message:status', { messageId: message.id, status: payload.status });
-        return { success: true, data: message };
+        return message ;
     };
 
-    static async seenBy(payload: { messageId: string, userId: string }): Promise<ServiceResponse> {
+    static async seenBy(payload: { messageId: string, userId: string }): Promise<MessageResponse> {
         const existingMessage = await prisma.message.findUnique({
             where: { id: payload.messageId },
             include: { chat: { include: { participants: true } } }
         });
 
-        if (!existingMessage) return { success: false, error: "Message does not exist" };
+        if (!existingMessage) throw new NotFoundError("Message does not exist");
 
         const isUserExistsInChat = existingMessage.chat.participants.some(p => p.userId === payload.userId);
-        if (!isUserExistsInChat) return { success: false, error: "Unauthorized" };
+        if (!isUserExistsInChat) throw new BadRequestError("Unauthorized");
 
         const dataToUpdate: any = { seenBy: { push: payload.userId } };
         if (payload.userId !== existingMessage.senderId) {
@@ -175,10 +173,10 @@ export class MessageService {
         });
 
         io.to(message.chatId).emit('message:seen', { messageId: payload.messageId, userId: payload.userId, chatId: message.chatId });
-        return { success: true, data: message };
+        return message ;
     };
 
-    static async markChatAsSeen(payload: { chatId: string, userId: string }): Promise<ServiceResponse> {
+    static async markChatAsSeen(payload: { chatId: string, userId: string }): Promise<null> {
         await prisma.message.updateMany({
             where: {
                 chatId: payload.chatId,
@@ -191,11 +189,11 @@ export class MessageService {
         });
 
         io.to(payload.chatId).emit('chat:seen', { chatId: payload.chatId, userId: payload.userId });
-        return { success: true };
+        return null;
     }
 
-    static async getAllChats(): Promise<ServiceResponse> {
+    static async getAllChats(): Promise<any> {
         const messages = await prisma.message.findMany({});
-        return { success: true, data: messages };
+        return messages;
     }
 }

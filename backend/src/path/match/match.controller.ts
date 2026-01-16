@@ -6,49 +6,45 @@ import { NextFunction, Request, Response } from "express";
 export const matchController = {
     getMatchById: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { matchId } = (req as any).validated!.params!;
-            const response = await MatchService.getMatchById(matchId);
-            if (!response.success) return errorResponse(res, response.error || "Failed to retrieve match", 400);
-            return successResponse(res, response.data, "Match retrieved successfully", 200);
+            const { matchId } = req.validated!.params!;
+            const data = await MatchService.getMatchById(matchId);
+            return successResponse(res, data, "Match retrieved successfully", 200);
         } catch (error) { 
-            (next as any)(error); 
+            next(error); 
         }   
     },
 
     getAllMatches: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = (req as any).userId!;
-            const type = (req as any).query?.type as string;
-            const response = await MatchService.getAllMatches(userId, type, (req as any).query);
-            if (!response.success) return errorResponse(res, response.error || "Failed to retrieve matches", 400);
-            return successResponse(res, response.data, "Matches retrieved successfully", 200);
+            const userId = req.userId!;
+            const {type} = req.validated!.query;
+            const data = await MatchService.getAllMatches(userId, type, req.validated!.query);
+            return successResponse(res, data, "Matches retrieved successfully", 200);
         } catch (error) { 
-            (next as any)(error); 
+            next(error); 
         }
     },
 
     updateStatus: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = (req as any).userId!;
-            const { matchId } = (req as any).validated!.params!;
-            const { status } = (req as any).validated!.body!;
-            const response = await MatchService.updateMatchStatus(userId, matchId, status);
-            if (!response.success) return errorResponse(res, response.error || "Update failed", 400);
-            return successResponse(res, response.data, `Request ${status.toLowerCase()} successfully`);
+            const userId = req.userId!;
+            const { matchId } = req.validated!.params!;
+            const { status } = req.validated!.body!;
+            const data = await MatchService.updateMatchStatus(userId, matchId, status);
+            return successResponse(res, data, `Request ${status.toLowerCase()} successfully`);
         } catch (error) { 
-            (next as any)(error); 
+            next(error); 
         }
     },
 
     createMatch: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const senderId = (req as any).userId!;
-            const { targetUserId } = (req as any).validated!.body!;
-            const response = await MatchService.sendMatchRequest(senderId, targetUserId);
-            if (!response.success) return errorResponse(res, response.error || "Failed to create match", 400);
-            return successResponse(res, response.data, "Match created successfully", 201);
+            const senderId = req.userId!;
+            const { targetUserId } = req.validated!.body!;
+            const data = await MatchService.sendMatchRequest(senderId, targetUserId);
+            return successResponse(res, data, "Match created successfully", 201);
         } catch (error) { 
-            (next as any)(error); 
+            next(error); 
         }   
     }
 }

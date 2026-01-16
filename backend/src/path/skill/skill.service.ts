@@ -1,39 +1,28 @@
 
 import prisma from '../../config/prisma.js'
-import { ServiceResponse } from '../../types/serviceResponse.js'
-
-export interface CreateSkillDTO {
-    name: string;
-    description?: string;
-    slug?: string;
-    popularity?: number;
-    icon?: string;
-}
-
-export type UpdateSkillDTO = Partial<CreateSkillDTO>;
+// Service methods return raw data or throw errors; controllers handle HTTP responses
+import {
+    SkillDTO,
+} from '../../types/service.types.js';
+import { Skill } from '@prisma/client';
 
 export class skillService {
-    static async createSkill(data: CreateSkillDTO): Promise<ServiceResponse> {
+    static async createSkill(data: SkillDTO): Promise<Skill> {
         const skill = await prisma.skill.create({ data });
-        return { success: true, data: skill };
+        return skill;
     }
 
-    static async updateSkill(id: string, data: UpdateSkillDTO): Promise<ServiceResponse> {
-        const skill = await prisma.skill.update({
-            where: { id },
-            data,
-        });
-        return { success: true, data: skill };
+    static async updateSkill(id: string, data: Partial<SkillDTO>): Promise<Skill> {
+        const skill = await prisma.skill.update({ where: { id }, data });
+        return skill;
     }
 
-    static async deleteSkill(id: string): Promise<ServiceResponse> {
-        const deleted = await prisma.skill.delete({
-            where: { id },
-        });
-        return { success: true, data: deleted };
+    static async deleteSkill(id: string): Promise<null> {
+        const deleted = await prisma.skill.delete({ where: { id } });
+        return null;
     }
 
-    static async getAllSkills(params: any = {}): Promise<ServiceResponse> {
+    static async getAllSkills(params: any = {}): Promise<{ skills: Skill[]; pagination: { total: number; page: number; limit: number; hasNextPage: boolean } }> {
         const page = Number(params.page) || 1;
         const limit = Number(params.limit) || 20;
         const skip = (page - 1) * limit;
@@ -49,19 +38,11 @@ export class skillService {
 
         const hasNextPage = page * limit < total;
 
-        return { 
-            success: true, 
-            data: { 
-                skills, 
-                pagination: { total, page, limit, hasNextPage } 
-            } 
-        };
+        return { skills, pagination: { total, page, limit, hasNextPage } };
     }
 
-    static async getSkillById(id: string): Promise<ServiceResponse> {
-        const skill = await prisma.skill.findUnique({
-            where: { id },
-        });
-        return { success: true, data: skill };
+    static async getSkillById(id: string): Promise<Skill | null> {
+        const skill = await prisma.skill.findUnique({ where: { id } });
+        return skill;
     }
 }

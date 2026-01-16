@@ -1,15 +1,19 @@
 import prisma from "../../config/prisma.js";
-import { ServiceResponse } from "../../types/serviceResponse.js";
+// Service methods return raw data or throw errors; controllers handle HTTP responses
+import { BadRequestError } from '../../errors/BadRequestError.js';
+import { NotFoundError } from '../../errors/NotFoundError.js';
 import { getCache, setCache } from "../../utils/cache.js";
-
-export interface CreateChatDTO {
-    participants: string[];
-}
+import {
+  CreateChatDTO,
+  ChatDetail,
+  ChatPreview,
+  AllChatsResponse,
+  UserProfilePreview,
+} from "../../types/service.types.js";
 
 export class ChatService {
-    static async createChat(data: CreateChatDTO): Promise<ServiceResponse> {
-        if (data.participants.length < 2)
-            return { success: false, error: "Minimum 2 participants required" };
+    static async createChat(data: CreateChatDTO): Promise<ChatPreview> {
+        if (data.participants.length < 2) throw new BadRequestError("Minimum 2 participants required");
 
         const existingChat = await prisma.chat.findFirst({
             where: {
@@ -19,7 +23,7 @@ export class ChatService {
             },
         });
 
-        if (existingChat) return { success: true, data: existingChat };
+        if (existingChat) return existingChat as ChatPreview;
 
         const chat = await prisma.chat.create({
             data: {
@@ -31,23 +35,13 @@ export class ChatService {
             },
         });
 
-        return { success: true, data: chat };
+        return chat as ChatPreview;
     }
 
-    static async getChatById(
+        static async getChatById(
         id: string,
         userId: string
-    ): Promise<ServiceResponse> {
-        const cacheKey = `chat:${id}`;
-
-        const cachedChat = await getCache(cacheKey);
-        if (cachedChat) {
-            return {
-                success: true,
-                data: JSON.parse(cachedChat)
-            }
-        }
-
+    ): Promise<ChatDetail> {
         const chat = await prisma.chat.findFirst({
             where: { id },
             include: {
@@ -64,24 +58,24 @@ export class ChatService {
             },
         });
 
-        if (!chat) return { success: false, error: "Chat not found" };
-        if (!chat.participants.some((p) => p.userId === userId))
-            return { success: false, error: "Unauthorized" };
+        if (!chat) throw new NotFoundError("Chat not found");
+        if (!chat.participants.some((p) => p.userId === userId)) throw new BadRequestError("Unauthorized");
 
-        const formattedChat = chat.participants.map(({ user }) => ({
-            ...user,
-            avatar: user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
-        }));
+        const formattedChat = {
+            ...chat,
+            participants: chat.participants.map(({ user }) => ({
+                ...user,
+                avatar: user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
+            })),
+        };
 
-        await setCache(cacheKey, formattedChat, 30);
-
-        return { success: true, data: formattedChat };
+        return formattedChat as ChatDetail;
     }
 
     static async getAllChats(
         userId: string,
         params: any = {}
-    ): Promise<ServiceResponse> {
+    ): Promise<AllChatsResponse> {
 
         const page = Number(params.page) || 1;
         const limit = Number(params.limit) || 15;
@@ -94,10 +88,7 @@ export class ChatService {
         const cachedChats = await getCache(cacheKey);
         if (cachedChats) {
             console.log("returned from cache ✅");
-            return {
-                success: true,
-                data: JSON.parse(cachedChats),
-            };
+            return JSON.parse(cachedChats);
         }
 
         // 2️⃣ Fetch from DB
@@ -151,61 +142,21 @@ export class ChatService {
         // 4️⃣ Save to cache (SHORT TTL for chats)
         await setCache(cacheKey, responseData, 20); // ⏱ 20 seconds
 
-        return {
-            success: true,
-            data: responseData,
-        };
+        return responseData as AllChatsResponse;
     }
 
 
     static async deleteChat(payload: {
         chatId: string;
         userId: string;
-    }): Promise<ServiceResponse> {
+    }): Promise<null> {
         const deleted = await prisma.chat.deleteMany({
             where: {
                 id: payload.chatId,
                 participants: { some: { userId: payload.userId } },
             },
         });
-        if (deleted.count === 0)
-            return { success: false, error: "Deletion failed" };
-        return { success: true, data: { chatId: payload.chatId } };
-    }
-
-    static async addParticipant(payload: {
-        chatId: string;
-        userId: string;
-    }): Promise<ServiceResponse> {
-        const chat = await prisma.chat.findUnique({
-            where: { id: payload.chatId },
-        });
-        if (!chat) return { success: false, error: "Chat not found" };
-
-        const participant = await (prisma as any).participant.create({
-            data: {
-                chatId: payload.chatId,
-                userId: payload.userId,
-            },
-        });
-        return { success: true, data: participant };
-    }
-
-    static async removeParticipant(payload: {
-        chatId: string;
-        userId: string;
-    }): Promise<ServiceResponse> {
-        const deleted = await (prisma as any).participant.deleteMany({
-            where: {
-                chatId: payload.chatId,
-                userId: payload.userId,
-            },
-        });
-        if (deleted.count === 0)
-            return { success: false, error: "Participant not found" };
-        return {
-            success: true,
-            data: { chatId: payload.chatId, userId: payload.userId },
-        };
+        if (deleted.count === 0) throw new NotFoundError("Deletion failed");
+        return null;
     }
 }

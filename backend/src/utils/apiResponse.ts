@@ -29,7 +29,7 @@ export function successResponse<T extends JsonValue | object>(
   status: number = 200
 ): Response {
   // Cast res to any to access status method
-  return (res as any).status(status).json({
+  return res.status(status).json({
     success: true,
     message,
     data,

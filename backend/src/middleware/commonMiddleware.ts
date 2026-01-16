@@ -3,6 +3,8 @@ import { errorResponse } from '../utils/apiResponse.js';
 import { ZodError } from 'zod';
 import { PrismaError, prismaErrorHandler } from '../utils/prismaErrorHandler.js';
 import * as PrismaModule from '@prisma/client';
+import { HttpError } from "../errors/HttpError.js";
+
 
 /**
  * Fixed: Cast Prisma from module to any to bypass missing export error.
@@ -77,6 +79,14 @@ export const errorHandler: ErrorRequestHandler = (
       prismaError.status,
       prismaError.errors
     ) as any;
+  }
+
+
+  if (err instanceof HttpError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message || 'Internalq server error',
+    });
   }
 
   // Send error response with 500 status

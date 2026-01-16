@@ -9,6 +9,14 @@ export const MatchValidation = {
         }),
     }),
 
+    getAllMatches: z.object({
+        query: z.object({
+            type: z.string().optional(),
+            page: z.string().optional(),
+            limit: z.string().optional(),
+        }),
+    }),
+
     createMatch: z.object({
         body: z.object({
             targetUserId: objectId,

@@ -32,7 +32,7 @@ export const mediaController = {
       }, "Upload signature generated successfully");
     } catch (error) {
       // Cast next to any to resolve "no call signatures" error
-      (next as any)(error);
+      next(error);
     }
   }
 };

@@ -1,11 +1,30 @@
 
 import z from "zod";
-import { objectId } from "../common/objectId.js";
 
 export const UserValidation = {
     getUserById: z.object({
         params: z.object({
-            userId: z.string() // Could be ID or uId string
+            userIdORuId: z.string().min(4),
+        })
+    }),
+
+    getMutualSkills: z.object({
+        params: z.object({
+            otherUserId: z.string().min(24).max(24),
+        })
+    }),
+    
+    getAllUsers: z.object({
+        query: z.object({
+            page: z.string().optional(),
+            limit: z.string().optional(),
+            search: z.string().optional(),
+        }).optional()
+    }),
+
+    userSubscription: z.object({
+        body: z.object({
+            subscription: z.any(),
         })
     }),
 

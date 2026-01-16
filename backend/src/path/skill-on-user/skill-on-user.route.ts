@@ -14,7 +14,7 @@ router.get('/:skillOnUserId', validate(SkillOnUserValidation.getSkillOnUserById)
 router.put('/:skillOnUserId', auth, validate(SkillOnUserValidation.updateSkillOnUser), skillOnUser.update);
 router.delete('/:skillOnUserId', auth, validate(SkillOnUserValidation.deleteSkillOnUser), skillOnUser.delete);
 
-router.get('/matching/:otherUserId', auth, skillOnUser.getMatching);
+router.get('/matching/:otherUserId', auth, validate(SkillOnUserValidation.getMatchingSkills), skillOnUser.getMatching);
 router.get('/user/:userId', validate(SkillOnUserValidation.getSkillsOnUserByUserId), skillOnUser.getAllByUser);
 
 export default router;

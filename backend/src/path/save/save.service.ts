@@ -1,25 +1,17 @@
 
 import prisma from '../../config/prisma.js'
-import { ServiceResponse } from '../../types/serviceResponse.js'
+// Service methods return raw data or throw errors; controllers handle HTTP responses
 import * as PrismaModule from '@prisma/client'
+import {
+    SaveResponse,
+    AllSavesResponse,
+    SaveDTO,
+} from '../../types/service.types.js';
 
 const { SaveType } = PrismaModule as any;
 
-export interface ToggleSaveDTO {
-    saverId: string
-    type: any 
-}
-
-export interface ToggleSaveUserDTO extends ToggleSaveDTO {
-    userId: string,
-}
-
-export interface ToggleSaveMatchDTO extends ToggleSaveDTO {
-    matchId: string
-}
-
 export class SaveService {
-    static async toggleSaveUser(data: ToggleSaveUserDTO): Promise<ServiceResponse> {
+    static async toggleSaveUser(data: { saverId: string, userId: string, type: any }): Promise<SaveResponse | {unsaved: true}> {
         const { saverId, userId } = data;
 
         const existingsavedMatch = await prisma.save.findUnique({
@@ -41,23 +33,14 @@ export class SaveService {
                 }
             });
 
-            return {
-                success: true,
-                data: { unsaved: true }
-            };
+            return { unsaved: true };
         }
 
-        const savedMatch = await prisma.save.create({
-            data
-        });
-
-        return {
-            success: true,
-            data: savedMatch
-        };
+        const savedMatch = await prisma.save.create({ data });
+        return savedMatch;
     };
 
-    static async toggleSaveMatch(data: ToggleSaveMatchDTO): Promise<ServiceResponse> {
+    static async toggleSaveMatch(data: { saverId: string, matchId: string, type: any }): Promise<SaveResponse | {unsaved: true}> {
         const { saverId, matchId } = data;
 
         const existingSavedMatch = await prisma.save.findUnique({
@@ -79,23 +62,14 @@ export class SaveService {
                 }
             });
 
-            return {
-                success: true,
-                data: { unsaved: true }
-            };
+            return { unsaved: true };
         }
 
-        const savedMatch = await prisma.save.create({
-            data
-        });
-
-        return {
-            success: true,
-            data: savedMatch
-        };
+        const savedMatch = await prisma.save.create({ data });
+        return savedMatch;
     };
 
-    static async getsavedUsers(saverId: string): Promise<ServiceResponse> {
+    static async getsavedUsers(saverId: string): Promise<Save[]> {
         const savedUsers = await prisma.save.findMany({
             where: {
                 saverId,
@@ -103,13 +77,10 @@ export class SaveService {
             }
         });
 
-        return {
-            success: true,
-            data: savedUsers
-        }
+        return savedUsers;
     }
 
-    static async getSavedMatches(saverId: string): Promise<ServiceResponse> {
+    static async getSavedMatches(saverId: string): Promise<Save[]> {
         const savedMatches = await prisma.save.findMany({
             where: {
                 saverId,
@@ -117,18 +88,12 @@ export class SaveService {
             }
         });
 
-        return {
-            success: true,
-            data: savedMatches
-        }
+        return savedMatches;
     };
 
-    static async getAll(): Promise<ServiceResponse> {
+    static async getAll(): Promise<Save[]> {
         const saves = await prisma.save.findMany({});
 
-        return {
-            success: true,
-            data: saves
-        }
+        return saves;
     }
 }

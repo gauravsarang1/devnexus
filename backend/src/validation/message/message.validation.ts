@@ -1,9 +1,6 @@
 
 import z from "zod";
-import * as PrismaModule from "@prisma/client";
 import { objectId } from "../common/objectId.js";
-
-const { MessageStatus } = PrismaModule as any;
 
 export const MessageValidation = {
     getMessagesByChatId: z.object({
@@ -20,6 +17,12 @@ export const MessageValidation = {
         params: z.object({
             messageId: objectId,
         }),
+    }),
+
+    markChatAsSeen: z.object({
+        params: z.object({
+            chatId: objectId
+        })
     }),
 
     createMessage: z.object({

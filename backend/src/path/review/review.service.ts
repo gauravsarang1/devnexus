@@ -1,25 +1,31 @@
 
 import prisma from '../../config/prisma.js'
-import { ServiceResponse } from '../../types/serviceResponse.js'
+// Service methods return raw data or throw errors; controllers handle HTTP responses
+import { BadRequestError } from '../../errors/BadRequestError.js'
+import { NotFoundError } from '../../errors/NotFoundError.js'
 import { SearchParams } from '../../types/search-params.js'
 import { NotificationService } from '../notification/notification.service.js'
 import io from '../../sockets/socketHandlers.js'
-
-export interface CreateReviewDTO {
-    reviewerId: string, reviewedUserId: string, comment?: string, rating: number
-};
+import {
+    CreateReviewDTO,
+    ReviewResponse,
+    UserReviewsResponse,
+} from '../../types/service.types.js'
 
 interface ReviewSearchParams extends SearchParams {
     reviewerId?: string;
     reviewedUserId?: string;
 }
 
-export type EditReviewDTO = Partial<Pick<CreateReviewDTO, 'comment' | 'rating'>>
-
 export class ReviewService {
-    static async createReview(data: CreateReviewDTO): Promise<ServiceResponse> {
+    static async createReview(data: CreateReviewDTO): Promise<ReviewResponse> {
         const review = await prisma.review.create({
-            data,
+            data: {
+                reviewerId: data.reviewerId,
+                reviewedUserId: data.reviewedUserId,
+                rating: data.rating,
+                comment: data.comment
+            },
             include: { reviewer: { select: { name: true } } }
         });
 
@@ -41,13 +47,10 @@ export class ReviewService {
             link: `/profile`
         });
 
-        return {
-            success: true,
-            data: review
-        }
+        return review;
     };
 
-    static async getReviews(params: ReviewSearchParams): Promise<ServiceResponse> {
+    static async getReviews(params: ReviewSearchParams): Promise<{reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean }}> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
@@ -80,31 +83,21 @@ export class ReviewService {
         ]);
 
         return {
-            success: true,
-            data: {
-                reviews,
-                pagination: {
-                    total,
-                    page,
-                    limit,
-                    pages: Math.ceil(total / limit),
-                    hasNextPage: page * limit < total,
-                }
+            reviews,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
             }
         };
     };
 
-    static async editReview(reviewId: string, reviewerId: string, data: EditReviewDTO): Promise<ServiceResponse> {
-        const existingReview = await prisma.review.findUnique({
-            where: {
-                id: reviewId
-            }
-        });
-
-        if (existingReview?.reviewerId !== reviewerId) return {
-            success: false,
-            error: "Unauthorized: you can not update this review"
-        };
+    static async editReview(reviewId: string, reviewerId: string, data: EditReviewDTO): Promise<Review> {
+        const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
+        if (!existingReview) throw new NotFoundError("Review not found");
+        if (existingReview.reviewerId !== reviewerId) throw new BadRequestError("Unauthorized: you can not update this review");
 
         const review = await prisma.review.update({
             where: {
@@ -114,23 +107,13 @@ export class ReviewService {
             data
         });
 
-        return {
-            success: true,
-            data: review
-        }
+        return review;
     };
 
-    static async deleteReview(reviewId: string, currentUser: string): Promise<ServiceResponse> {
-        const existingReview = await prisma.review.findUnique({
-            where: {
-                id: reviewId
-            }
-        });
-
-        if (existingReview?.reviewerId !== currentUser && existingReview?.reviewedUserId !== currentUser) return {
-            success: false,
-            error: "Unauthorized: you can not update this review"
-        };
+    static async deleteReview(reviewId: string, currentUser: string): Promise<null> {
+        const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
+        if (!existingReview) throw new NotFoundError("Review not found");
+        if (existingReview.reviewerId !== currentUser && existingReview.reviewedUserId !== currentUser) throw new BadRequestError("Unauthorized: you can not update this review");
 
         const review = await prisma.review.delete({
             where: {
@@ -138,26 +121,20 @@ export class ReviewService {
             }
         });
 
-        return {
-            success: true,
-            data: review
-        }
+        return null;
     };
 
-    static async getReviewById(reviewId: string): Promise<ServiceResponse> {
+    static async getReviewById(reviewId: string): Promise<Review | null> {
         const review = await prisma.review.findUnique({
             where: {
                 id:reviewId
             }
         });
 
-        return {
-            success: true,
-            data: review
-        }
+        return review;
     };
 
-    static async getReviewsByReviewerId(reviewerId: string, params: SearchParams): Promise<ServiceResponse> {
+    static async getReviewsByReviewerId(reviewerId: string, params: SearchParams): Promise<{reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean }}> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
@@ -175,21 +152,18 @@ export class ReviewService {
         ]);
 
         return {
-            success: true,
-            data: {
-                reviews,
-                pagination: {
-                    total,
-                    page,
-                    limit,
-                    pages: Math.ceil(total / limit),
-                    hasNextPage: page * limit < total,
-                }
+            reviews,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
             }
         };
     };
 
-    static async getReviewsByReviewedUserId(reviewedUserId: string, params: SearchParams): Promise<ServiceResponse> {
+    static async getReviewsByReviewedUserId(reviewedUserId: string, params: SearchParams): Promise<{reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean }}> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
@@ -207,16 +181,13 @@ export class ReviewService {
         ]);
 
         return {
-            success: true,
-            data: {
-                reviews,
-                pagination: {
-                    total,
-                    page,
-                    limit,
-                    pages: Math.ceil(total / limit),
-                    hasNextPage: page * limit < total,
-                }
+            reviews,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
             }
         };
     };

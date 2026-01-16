@@ -1,9 +1,6 @@
 
 import z from "zod"
-import * as PrismaModule from "@prisma/client"
 import { objectId } from "../common/objectId.js";
-
-const { SkillRole, SkillLevel } = PrismaModule as any;
 
 export const SkillOnUserValidation = {
     getSkillOnUserById: z.object({
@@ -15,6 +12,12 @@ export const SkillOnUserValidation = {
     getSkillsOnUserByUserId: z.object({
         params: z.object({
             userId: objectId
+        })
+    }),
+
+    getMatchingSkills: z.object({
+        params: z.object({
+            otherUserId: objectId
         })
     }),
 

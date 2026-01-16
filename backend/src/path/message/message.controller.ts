@@ -6,31 +6,12 @@ import { MessageService } from "./message.service.js";
 export const messageController = {
     sendMessage: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const senderId = (req as any).userId!;
-            const  { chatId, text }  = (req as any).validated!.body!
-
-            const response = await MessageService.sendMessage({
-                chatId,
-                text,
-                senderId,
-            });
-
-            if (!response.success) {
-                return errorResponse(
-                    res,
-                    response.error || "Failed to send message",
-                    500
-                );
-            }
-            
-            return successResponse(
-                res,
-                response.data,
-                "Message sent successfully",
-                201
-            );
+            const senderId = req.userId!;
+            const  { chatId, text }  = req.validated!.body!
+            const data = await MessageService.sendMessage({ chatId, text, senderId });
+            return successResponse(res, data, "Message sent successfully", 201);
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
@@ -40,76 +21,38 @@ export const messageController = {
         next: NextFunction
     ) => {
         try {
-            const { chatId } = (req as any).validated!.params!
-            const { page, limit } = (req as any).query;
-
-            const response = await MessageService.getMessagesByChatId({
+            const { chatId } = req.validated!.params!
+            const query = req.validated!.query;
+            const data = await MessageService.getMessagesByChatId({
                 chatId, 
-                page: page ? parseInt(page) : undefined, 
-                limit: limit ? parseInt(limit) : undefined
+                query
             });
-
-            if (!response.success) {
-                return errorResponse(
-                    res,
-                    response.error || "Failed to retrieve messages",
-                    500
-                );
-            }
-
-            return successResponse(
-                res,
-                response.data,
-                "Messages retrieved successfully"
-            );
+            return successResponse(res, data, "Messages retrieved successfully");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
     deleteMessage: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = (req as any).userId!;
-            const { messageId } = (req as any).validated!.params!
-        
-            const response = await MessageService.deleteMessage({
-                messageId,
-                userId
-            });
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Message not found", 404);
-            }
-
-            return successResponse(
-                res,
-                response.data,
-                "Message deleted successfully"
-            );
+            const userId = req.userId!;
+            const { messageId } = req.validated!.params!
+            const data = await MessageService.deleteMessage({ messageId, userId });
+            return successResponse(res, data, "Message deleted successfully");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
     editMessage: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = (req as any).userId!;
-            const { messageId } = (req as any).validated!.params!
-            const { newText } = (req as any).validated!.body!
-
-            const response = await MessageService.editMessage({
-                messageId,
-                newText,
-                userId
-            });
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Message not found", 404);
-            }
-
-            return successResponse(res, response.data, "Message edited successfully");
+            const userId = req.userId!;
+            const { messageId } = req.validated!.params!
+            const { newText } = req.validated!.body!
+            const data = await MessageService.editMessage({ messageId, newText, userId });
+            return successResponse(res, data, "Message edited successfully");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
@@ -119,87 +62,43 @@ export const messageController = {
         next: NextFunction
     ) => {
         try {
-            const { messageId } = (req as any).validated!.params!
-            const { status } = (req as any).validated!.body!
-
-            const response = await MessageService.changeMessageStatus({
-                messageId,
-                status
-            });
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Message not found", 404);
-            }
-
-            return successResponse(
-                res,
-                response.data,
-                "Message status updated successfully"
-            );
+            const { messageId } = req.validated!.params!
+            const { status } = req.validated!.body!
+            const data = await MessageService.changeMessageStatus({ messageId, status });
+            return successResponse(res, data, "Message status updated successfully");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
     seenBy: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = (req as any).userId!;
-            const { messageId } = (req as any).validated!.params!
-
-            const response = await MessageService.seenBy({
-                messageId,
-                userId
-            });
-            
-            if (!response.success) {
-                return errorResponse(res, response.error || "Message not found", 404);
-            }
-
-            return successResponse(
-                res,
-                response.data,
-                "Message seenBy updated successfully"
-            );
+            const userId = req.userId!;
+            const { messageId } = req.validated!.params!
+            const data = await MessageService.seenBy({ messageId, userId });
+            return successResponse(res, data, "Message seenBy updated successfully");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
     markChatAsSeen: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = (req as any).userId!;
-            const { chatId } = (req as any).params;
-
-            const response = await MessageService.markChatAsSeen({
-                chatId,
-                userId
-            });
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Update failed", 500);
-            }
-
+            const userId = req.userId!;
+            const { chatId } = req.validated!.params;
+            await MessageService.markChatAsSeen({ chatId, userId });
             return successResponse(res, null, "Chat marked as seen");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 
     getAllMessages: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const response = await MessageService.getAllChats();
-
-            if (!response.success) {
-                return errorResponse(res, response.error || "Messages not found", 404);
-            }
-
-            return successResponse(
-                res,
-                response.data,
-                "All Messages Retrieved Successfully"
-            );
+            const data = await MessageService.getAllChats();
+            return successResponse(res, data, "All Messages Retrieved Successfully");
         } catch (error) {
-            (next as any)(error);
+            next(error);
         }
     },
 };
