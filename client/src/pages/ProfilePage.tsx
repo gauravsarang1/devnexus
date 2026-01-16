@@ -7,7 +7,7 @@ import ProfileHeader from "../components/Profile/ProfileHeader";
 import SkillBadge from "../components/Profile/SkillBadge";
 import AddSkillModal from "../components/Profile/AddSkillModal";
 import ProfileStats from "../components/Profile/ProfileStats";
-import { userService } from "../services/userService";
+import { ProfileUserData, userService } from "../services/userService";
 import { matchService } from "../services/matchService";
 import { skillService } from "../services/skillService";
 import { mediaService } from "../services/mediaService";
@@ -23,7 +23,7 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ProfileUserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isUploading, setIsUploading] = useState<"avatar" | "bg" | null>(null);

@@ -7,6 +7,8 @@ import { useDispatch } from 'react-redux';
 import { authService } from '../services/authService';
 import { setToken } from '../store/slices/authSlice';
 import { AppDispatch } from '../store';
+import { FcGoogle } from "react-icons/fc";
+import { loginWithGoogle } from '../utils/googleLogin';
 
 // Cast motion to any to avoid property existence errors in JSX
 const motion = m as any;
@@ -79,6 +81,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome Back</h1>
           <p className="text-slate-500 mt-2 text-center">Login to your SkillSwap account and continue building.</p>
+        </div>
+
+        {/* Google Login Button*/}
+        <button
+          onClick={loginWithGoogle}
+          className="w-full py-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mb-6 shadow-sm"
+        >
+          <FcGoogle size={24} />
+          <span className="font-bold text-slate-700">Continue with Google</span>
+        </button>
+
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-grow h-px bg-slate-200" />
+          <span className="text-sm text-slate-400 font-medium">or</span>
+          <div className="flex-grow h-px bg-slate-200" />
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">

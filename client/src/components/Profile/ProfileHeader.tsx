@@ -4,13 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Camera, Loader2, User as UserIcon, Type, Check, X, CheckCircle2, Calendar, Mail, UserPlus, Sparkles 
 } from 'lucide-react';
-import { User } from '../../types';
+import { UserRoundCheck } from 'lucide-react';
 import { matchService } from '../../services/matchService';
 import { aiService } from '../../services/aiService';
 import { toast } from 'sonner';
+import { ProfileUserData } from '@/src/services/userService';
 
 interface ProfileHeaderProps {
-  user: User;
+  user: ProfileUserData;
   isOwnProfile: boolean;
   isEditing: boolean;
   setIsEditing: (val: boolean) => void;
@@ -49,6 +50,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
       toast.error("Could not refine bio at this time.");
     } finally {
       setIsRefiningBio(false);
+    }
+  };
+
+  const sendMatchRequest = async (targetUserId: string) => {
+    try {
+      const res = await matchService.sendRequest(targetUserId);
+      if (res.id) {
+        toast.success("Connection request sent!");
+      }
+    } catch (err) {
+      toast.error("Could not send connection request.");
     }
   };
 
@@ -148,9 +160,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
                 </div>
                 <div className="flex gap-3 justify-center md:justify-end">
                   {!isOwnProfile ? (
-                    <button onClick={() => matchService.sendRequest(user.id)} className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-blue-500/20 flex items-center gap-2 hover:scale-105 transition-all">
-                      <UserPlus size={18} /> Connect
-                    </button>
+                    user.isConnected ? (
+                      <button disabled className={`px-8 py-3 ${user.status === 'CONNECTED' ? 'bg-green-600' : user.status === 'PENDING' ? 'bg-yellow-500' : 'bg-green-600'} text-white rounded-2xl font-bold text-sm shadow-lg flex items-center gap-2`}>
+                        <UserPlus size={18} /> {user.status === 'CONNECTED' ? 'Connected' : user.status === 'PENDING' ? 'Request Sent' : 'Connected'}
+                      </button>
+                    ) : (
+                      <button onClick={() => sendMatchRequest(user.id)} className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+                        <UserPlus size={18} /> Connect
+                      </button>
+                    )
                   ) : (
                     <button onClick={() => setIsEditing(true)} className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-all">
                       Edit Profile

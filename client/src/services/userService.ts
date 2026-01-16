@@ -9,6 +9,11 @@ export interface UserSearchFilters {
   limit?: number;
 }
 
+export interface ProfileUserData  extends User {
+  isConnected?: boolean;
+  status?: string | null;
+}
+
 export interface DashboardActivity {
   hasActivity: boolean;
   pendingRequests: number;
@@ -20,7 +25,7 @@ export interface DashboardActivity {
 
 export type UserPaginatedResponse = PaginatedResponse<User, 'users'>;
 export type DashboardResponse = BaseApiResponse<DashboardActivity>;
-export type ProfileResponse = BaseApiResponse<User>;
+export type ProfileResponse = BaseApiResponse<ProfileUserData>;
 
 export const userService = {
   searchUsers: async (filters: UserSearchFilters): Promise<UserPaginatedResponse['data']> => {
