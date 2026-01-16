@@ -48,7 +48,6 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
 
     try {
       const res = await matchService.getMatches(activeTab, pageNum, 10);
-      console.log("Fetched matches:", res.matches);
       setMatches((prev) =>
         pageNum === 1 ? res.matches : [...prev, ...res.matches]
       );

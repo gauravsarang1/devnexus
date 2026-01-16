@@ -1,9 +1,10 @@
 import React from "react";
 import { CheckCircle2, User as UserIcon } from "lucide-react";
 import { User } from "../../types";
+import { ProfileUserData } from "@/src/services/userService";
 
 interface UserCardProps {
-  user: User;
+  user: ProfileUserData;
   onConnect: (id: string) => void;
   onNavigate: (path: string) => void;
   currentUser: User | null;
@@ -87,8 +88,8 @@ const UserCard: React.FC<UserCardProps> = ({
               This is you
             </span>
           ) : user.isConnected ? (
-            <span className="flex-grow py-2 text-center text-xs sm:text-sm font-bold rounded-xl bg-green-50 text-green-600">
-              Connected
+            <span className={`flex-grow py-2 text-center text-xs sm:text-sm font-bold rounded-xl bg-green-50 ${user.status === 'CONNECTED' ? 'text-green-600' : user.status === 'PENDING' ? 'text-yellow-600' : 'text-green-600'}`}>
+              {user.status === 'CONNECTED' ? 'Connected' : user.status === 'PENDING' ? 'Request Sent' : 'Connected'}
             </span>
           ) : (
             <button

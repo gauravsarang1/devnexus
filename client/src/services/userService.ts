@@ -23,7 +23,7 @@ export interface DashboardActivity {
   unreadNotificationsCount: number;
 }
 
-export type UserPaginatedResponse = PaginatedResponse<User, 'users'>;
+export type UserPaginatedResponse = PaginatedResponse<ProfileUserData, 'users'>;
 export type DashboardResponse = BaseApiResponse<DashboardActivity>;
 export type ProfileResponse = BaseApiResponse<ProfileUserData>;
 
@@ -44,8 +44,8 @@ export const userService = {
     return response.data.data;
   },
 
-  getProfile: async (uId: string): Promise<ProfileResponse['data']> => {
-    const response = await apiClient.get<ProfileResponse>(`/users/${uId}`);
+  getProfile: async (userIdORuId: string): Promise<ProfileResponse['data']> => {
+    const response = await apiClient.get<ProfileResponse>(`/users/${userIdORuId}`);
     return response.data.data;
   },
 

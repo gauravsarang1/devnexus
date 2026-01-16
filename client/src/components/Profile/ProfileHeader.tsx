@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Camera, Loader2, User as UserIcon, Type, Check, X, CheckCircle2, Calendar, Mail, UserPlus, Sparkles 
+import {
+  Camera, Loader2, User as UserIcon, Type, Check, X, CheckCircle2, Calendar, Mail, UserPlus, Sparkles, Clock, UserCheck
 } from 'lucide-react';
 import { UserRoundCheck } from 'lucide-react';
 import { matchService } from '../../services/matchService';
@@ -26,10 +26,10 @@ interface ProfileHeaderProps {
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
-  const { 
-    user, isOwnProfile, isEditing, setIsEditing, editData, setEditData, 
-    handleUpdateProfile, handleFileChange, isUploading, isUpdating, 
-    bgInputRef, avatarInputRef 
+  const {
+    user, isOwnProfile, isEditing, setIsEditing, editData, setEditData,
+    handleUpdateProfile, handleFileChange, isUploading, isUpdating,
+    bgInputRef, avatarInputRef
   } = props;
 
   const [isRefiningBio, setIsRefiningBio] = useState(false);
@@ -64,17 +64,37 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
     }
   };
 
+  const buttonConfig =
+    user.status === "ACCEPTED"
+      ? {
+        text: "Connected",
+        classes: "bg-green-50 text-green-500",
+        icon: <UserCheck size={18} />,
+      }
+      : user.status === "PENDING"
+        ? {
+          text: "Request Sent",
+          classes: "bg-yellow-50 text-yellow-500",
+          icon: <Clock size={18} />,
+        }
+        : {
+          text: "Connect",
+          classes: "bg-blue-500 text-white hover:bg-blue-600",
+          icon: <UserPlus size={18} />,
+        };
+        
+        console.log('User status:', user);
   return (
     <section className="bg-white rounded-[40px] border border-slate-100 shadow-sm relative overflow-hidden mb-8">
       {/* Background Banner */}
       <div className="h-40 md:h-52 w-full relative group">
-        <img 
-          src={user.background || 'https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'} 
-          className="w-full h-full object-cover" 
-          alt="Background" 
+        <img
+          src={user.background || 'https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=1200&q=80'}
+          className="w-full h-full object-cover"
+          alt="Background"
         />
         {isOwnProfile && (
-          <button 
+          <button
             onClick={() => bgInputRef.current?.click()}
             className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-2 font-bold"
           >
@@ -87,13 +107,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
       <div className="p-6 md:p-10 pt-0 -mt-12 relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
         {/* Avatar */}
         <div className="relative group flex-shrink-0">
-          <img 
-            src={user.avatar || `https://picsum.photos/seed/${user.uId}/200/200`} 
-            className="w-32 h-32 md:w-40 md:h-40 rounded-[48px] object-cover ring-8 ring-white shadow-xl" 
+          <img
+            src={user.avatar || `https://picsum.photos/seed/${user.uId}/200/200`}
+            className="w-32 h-32 md:w-40 md:h-40 rounded-[48px] object-cover ring-8 ring-white shadow-xl"
             alt={user.name}
           />
           {isOwnProfile && (
-            <button 
+            <button
               onClick={() => avatarInputRef.current?.click()}
               className="absolute inset-0 bg-black/40 rounded-[48px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
             >
@@ -112,28 +132,27 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
                     <div className="relative">
                       <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                      <input type="text" value={editData.name} onChange={(e) => setEditData({...editData, name: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold outline-none transition-all" />
+                      <input type="text" value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} className="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold outline-none transition-all" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bio</label>
                     <div className="relative group/bio">
                       <Type className="absolute left-4 top-3 text-slate-400" size={18} />
-                      <textarea 
-                        value={editData.bio} 
-                        onChange={(e) => setEditData({...editData, bio: e.target.value})} 
+                      <textarea
+                        value={editData.bio}
+                        onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
                         placeholder="Tell the community what you're building..."
-                        className="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-2xl py-3 pl-12 pr-12 text-sm font-medium outline-none transition-all resize-none min-h-[80px]" 
+                        className="w-full bg-slate-50 border-2 border-transparent focus:border-blue-500 rounded-2xl py-3 pl-12 pr-12 text-sm font-medium outline-none transition-all resize-none min-h-[80px]"
                       />
                       <button
                         type="button"
                         onClick={handleAIRefineBio}
                         disabled={isRefiningBio}
-                        className={`absolute right-3 bottom-3 p-2 rounded-xl transition-all ${
-                          isRefiningBio 
-                            ? 'bg-blue-100 text-blue-600 animate-pulse' 
-                            : 'bg-white text-slate-400 hover:text-blue-600 shadow-sm border border-slate-100'
-                        }`}
+                        className={`absolute right-3 bottom-3 p-2 rounded-xl transition-all ${isRefiningBio
+                          ? 'bg-blue-100 text-blue-600 animate-pulse'
+                          : 'bg-white text-slate-400 hover:text-blue-600 shadow-sm border border-slate-100'
+                          }`}
                         title="Optimize Bio with AI"
                       >
                         <Sparkles size={16} />
@@ -160,15 +179,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
                 </div>
                 <div className="flex gap-3 justify-center md:justify-end">
                   {!isOwnProfile ? (
-                    user.isConnected ? (
-                      <button disabled className={`px-8 py-3 ${user.status === 'CONNECTED' ? 'bg-green-600' : user.status === 'PENDING' ? 'bg-yellow-500' : 'bg-green-600'} text-white rounded-2xl font-bold text-sm shadow-lg flex items-center gap-2`}>
-                        <UserPlus size={18} /> {user.status === 'CONNECTED' ? 'Connected' : user.status === 'PENDING' ? 'Request Sent' : 'Connected'}
-                      </button>
-                    ) : (
-                      <button onClick={() => sendMatchRequest(user.id)} className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
-                        <UserPlus size={18} /> Connect
-                      </button>
-                    )
+                    <button
+                      disabled={user.status !== null}
+                      onClick={() => sendMatchRequest(user.id)}
+                      className={`px-8 py-3 ${buttonConfig.classes} rounded-2xl font-bold text-sm shadow-lg flex items-center gap-2`}
+                    >
+                      {buttonConfig.icon}
+                      {buttonConfig.text}
+                    </button>
+
                   ) : (
                     <button onClick={() => setIsEditing(true)} className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-all">
                       Edit Profile

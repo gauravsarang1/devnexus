@@ -25,9 +25,9 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, activeTab, onStatusUpdate,
       <div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <img 
-              src={otherUser.avatar || `https://picsum.photos/seed/${otherUser.id}/200/200`} 
-              className="w-16 h-16 rounded-2xl object-cover ring-4 ring-slate-50" 
+            <img
+              src={otherUser.avatar || `https://picsum.photos/seed/${otherUser.id}/200/200`}
+              className="w-16 h-16 rounded-2xl object-cover ring-4 ring-slate-50"
               alt={otherUser.name}
             />
             <div>
@@ -61,13 +61,13 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, activeTab, onStatusUpdate,
       <div className="mt-auto">
         {activeTab === 'Incoming' && (
           <div className="flex gap-3">
-            <button 
+            <button
               onClick={() => onStatusUpdate(match.id, 'ACCEPTED')}
               className="flex-grow flex items-center justify-center gap-2 bg-blue-600 text-white py-3.5 rounded-2xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all"
             >
               <UserCheck size={18} /> Accept
             </button>
-            <button 
+            <button
               onClick={() => onStatusUpdate(match.id, 'DECLINED')}
               className="p-3.5 bg-slate-100 text-slate-500 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all"
             >
@@ -78,13 +78,13 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, activeTab, onStatusUpdate,
 
         {activeTab === 'Active' && (
           <div className="flex gap-3">
-            <button 
+            <button
               onClick={() => onNavigate('/chat')}
               className="flex-grow flex items-center justify-center gap-2 bg-slate-900 text-white py-3.5 rounded-2xl text-sm font-bold hover:bg-slate-800 transition-all"
             >
               <MessageSquare size={18} /> Open Chat
             </button>
-            <button 
+            <button
               onClick={() => onNavigate(`/profile?uId=${otherUser.uId}`)}
               className="p-3.5 bg-white border border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 transition-all"
             >
@@ -95,11 +95,13 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, activeTab, onStatusUpdate,
 
         {activeTab === 'Sent' && (
           <div className="flex items-center justify-between w-full p-2 bg-amber-50 rounded-2xl border border-amber-100">
-             <div className="flex items-center gap-3 pl-2">
-                <Clock size={16} className="text-amber-600" />
-                <span className="text-xs font-bold text-amber-700">Waiting for Response</span>
-             </div>
-             <button className="p-2 hover:bg-amber-100 rounded-xl transition-colors text-amber-600"><X size={16} /></button>
+            <div className="flex items-center gap-3 pl-2">
+              <Clock size={16} className="text-amber-600" />
+              <span className="text-xs font-bold text-amber-700">Waiting for Response</span>
+            </div>
+            <button
+              onClick={() => onStatusUpdate(match.id, 'DECLINED')}
+              className="p-2 hover:bg-amber-100 rounded-xl transition-colors text-amber-600"><X size={16} /></button>
           </div>
         )}
       </div>

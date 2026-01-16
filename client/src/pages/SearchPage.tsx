@@ -125,6 +125,7 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
             : await userService.searchUsers({ query, page, limit: 10 });
 
         setUsers((prev) => (page === 1 ? res.users : [...prev, ...res.users]));
+        console.log(res);
         setHasMore(res.pagination.hasNextPage);
       } catch {
         toast.error("Failed to load users");

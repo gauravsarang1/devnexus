@@ -1,32 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { motion as m } from "framer-motion";
 import { MessageCircle, Clock, Save, ArrowRight } from "lucide-react";
-import { authService } from "../services/authService";
+import { User } from "../types";
 
 const motion = m as any;
 
 interface ResumeActivityProps {
   activity?: any;
+  user?: User;
   navigate: (to: string) => void;
 }
 
 const ResumeActivity: React.FC<ResumeActivityProps> = ({
   activity,
+  user,
   navigate,
 }) => {
-  const [currentUserName, setCurrentUserName] = useState<string>("");
-
-  useEffect(() => {
-    authService.me().then((res) => {
-      if (res.success && res.data) setCurrentUserName(res.data.name);
-    });
-  }, []);
-
+  const currentUserName = user?.name || "User";
   const activities = [
     ...(activity?.recentChats?.map((chat: any) => {
+      console.log("chat in resume activity", chat);
       const partner = chat.participants.find(
-        (p: any) => p.user.name !== currentUserName
-      )?.user;
+        (p: any) => p.name !== currentUserName
+      );
       return {
         id: chat.id,
         type: "chat",

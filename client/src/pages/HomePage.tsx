@@ -48,7 +48,7 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
       <main className="grow pb-24 md:pb-0">
         <DashboardHero currentUser={currentUser}/>
           <>
-            <ResumeActivity activity={activity} navigate={navigate}/>
+            <ResumeActivity activity={activity} navigate={navigate} user={currentUser}/>
             <SkillDiscovery skills={activity?.trendingSkills} navigate={navigate}/>
             <SuggestedMatches suggestions={activity?.suggestions} navigate={navigate}/>
             {!isActivityLoading && Object.keys(activity || {}).length === 0 && (
