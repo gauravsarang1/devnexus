@@ -71,7 +71,7 @@ const ResumeActivity: React.FC<ResumeActivityProps> = ({
     }) ?? [];
 
   const activities: ActivityItem[] = [
-    ...chatActivities,
+    ...(activity?.pendingRequests && activity.pendingRequests > 0?chatActivities.slice(0, 2):chatActivities),
     {
       id: "pending",
       type: "match",

@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, CheckCheck, Clock, Loader2, Calendar } from "lucide-react";
 import { ChatMessage, User } from "../../types";
 
@@ -13,6 +13,9 @@ interface MessageListProps {
   onLoadMore?: () => void;
   isFetchingMore?: boolean;
   isLoading: boolean;
+  selectedMessages: ChatMessage[];
+  isSelectionMode: boolean;
+  onSelectToggle: (msg: ChatMessage) => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -25,6 +28,9 @@ const MessageList: React.FC<MessageListProps> = ({
   onLoadMore,
   isFetchingMore,
   isLoading,
+  selectedMessages,
+  isSelectionMode,
+  onSelectToggle,
 }) => {
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -39,12 +45,12 @@ const MessageList: React.FC<MessageListProps> = ({
             onLoadMore();
           }
         },
-        { threshold: 0.1 }
+        { threshold: 0.1 },
       );
 
       if (node) observer.current.observe(node);
     },
-    [isFetchingMore, hasMore, onLoadMore]
+    [isFetchingMore, hasMore, onLoadMore],
   );
 
   const StatusIcon = ({ status }: { status?: string }) => {
@@ -72,6 +78,38 @@ const MessageList: React.FC<MessageListProps> = ({
       day: "numeric",
       year: d.getFullYear() !== today.getFullYear() ? "numeric" : undefined,
     });
+  };
+
+  const LONG_PRESS_DURATION = 450;
+
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTriggered = useRef(false);
+
+  const handlePointerDown = (msg: ChatMessage) => {
+    longPressTriggered.current = false;
+
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      onSelectToggle(msg);
+    }, LONG_PRESS_DURATION);
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleClick = (msg: ChatMessage) => {
+    if (isSelectionMode && !longPressTriggered.current) {
+      onSelectToggle(msg);
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, msg: ChatMessage) => {
+    e.preventDefault();
+    onSelectToggle(msg);
   };
 
   if (isLoading) {
@@ -153,18 +191,16 @@ const MessageList: React.FC<MessageListProps> = ({
   return (
     <div
       ref={scrollRef}
-      className="grow overflow-y-auto px-4 py-8 md:px-12 space-y-2 scroll-smooth pb-32 custom-scrollbar bg-white"
+      className="grow overflow-y-auto overflow-x-hidden py-6 space-y-1 scroll-smooth pb-32 custom-scrollbar bg-white"
     >
-      <div ref={topRef} className="h-10 flex items-center justify-center mb-4">
-        {isFetchingMore ? (
+      <div ref={topRef} className="h-4 flex items-center justify-center mb-6">
+        {isFetchingMore && (
           <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
-            <Loader2 className="animate-spin text-blue-600" size={16} />
+            <Loader2 className="animate-spin text-blue-600" size={14} />
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Loading history
+              Loading History
             </span>
           </div>
-        ) : (
-          hasMore && <div className="h-4 w-full" />
         )}
       </div>
 
@@ -177,13 +213,13 @@ const MessageList: React.FC<MessageListProps> = ({
             new Date(msg.createdAt).toDateString();
         const isConsecutive =
           prevMsg && prevMsg.senderId === msg.senderId && !isNewDay;
+        const isSelected = selectedMessages.some((m) => m.id === msg.id);
 
         return (
           <React.Fragment key={msg.id}>
             {isNewDay && (
-              <div className="flex justify-center my-10">
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-100/50">
-                  <Calendar size={10} className="text-slate-400" />
+              <div className="flex justify-center my-8 px-4">
+                <div className="px-4 py-1 bg-slate-100/50 rounded-lg border border-slate-200/50">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     {formatDateLabel(msg.createdAt)}
                   </span>
@@ -192,61 +228,72 @@ const MessageList: React.FC<MessageListProps> = ({
             )}
 
             <div
-              className={`flex group ${
-                isMe ? "justify-end" : "justify-start"
-              } ${isConsecutive ? "mt-1" : "mt-6"}`}
+              onPointerDown={() => handlePointerDown(msg)}
+              onPointerUp={clearLongPress}
+              onPointerLeave={clearLongPress}
+              onClick={() => handleClick(msg)}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`relative w-full group transition-all duration-300 flex flex-col ${
+                isSelected ? "bg-blue-600/5" : "hover:bg-slate-50/50"
+              } ${isConsecutive ? "mt-0.5" : "mt-4"}`}
             >
-              {!isMe && (
-                <div className="w-10 shrink-0 mr-3">
-                  {!isConsecutive && (
+              {/* SELECTION INDICATOR LINE */}
+              <AnimatePresence>
+                {isSelected && (
+                  <motion.div
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    exit={{ scaleY: 0 }}
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 z-10"
+                  />
+                )}
+              </AnimatePresence>
+
+              <div
+                className={`flex w-full px-4 md:px-12 items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
+              >
+                {/* Avatar */}
+                <div className="w-8 md:w-10 shrink-0">
+                  {!isMe && !isConsecutive && (
                     <img
                       src={
                         partner?.avatar ||
                         `https://picsum.photos/seed/${partner?.uId}/100/100`
                       }
-                      className="w-10 h-10 rounded-2xl object-cover shadow-sm ring-2 ring-blue-50"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover shadow-sm ring-2 ring-blue-50"
+                      alt="avatar"
                     />
                   )}
                 </div>
-              )}
 
-              <div
-                className={`max-w-[85%] md:max-w-[70%] flex flex-col ${
-                  isMe ? "items-end" : "items-start"
-                }`}
-              >
+                {/* Bubble Container */}
                 <div
-                  className={`px-5 py-3 shadow-sm transition-all duration-300 ${
-                    isMe
-                      ? `bg-blue-600 text-white font-medium ${
-                          isConsecutive
-                            ? "rounded-3xl"
-                            : "rounded-3xl rounded-br-none"
-                        }`
-                      : `bg-slate-50 text-slate-800 font-medium border border-slate-100/50 ${
-                          isConsecutive
-                            ? "rounded-3xl"
-                            : "rounded-3xl rounded-bl-none"
-                        }`
-                  }`}
+                  className={`flex flex-col max-w-[80%] md:max-w-[70%] ${isMe ? "items-end" : "items-start"}`}
                 >
-                  <p className="text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap">
-                    {msg.text}
-                  </p>
-                </div>
+                  <div
+                    className={`relative px-4 py-2.5 shadow-sm transition-transform active:scale-[0.98] ${
+                      isMe
+                        ? `bg-blue-600 text-white ${isConsecutive ? "rounded-2xl" : "rounded-2xl rounded-br-none"}`
+                        : `bg-slate-100 text-slate-800 ${isConsecutive ? "rounded-2xl" : "rounded-2xl rounded-bl-none"}`
+                    }`}
+                  >
+                    <p className="text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap font-medium">
+                      {msg.text}
+                    </p>
+                  </div>
 
-                <div
-                  className={`flex items-center gap-2 mt-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity ${
-                    isMe ? "flex-row-reverse" : "flex-row"
-                  }`}
-                >
-                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                    {new Date(msg.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  {isMe && <StatusIcon status={msg.status} />}
+                  {/* Metadata Row */}
+                  <div
+                    className={`flex items-center gap-1.5 mt-1 px-1 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                  >
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                    {isMe && <StatusIcon status={msg.status} />}
+                  </div>
                 </div>
               </div>
             </div>
@@ -255,31 +302,20 @@ const MessageList: React.FC<MessageListProps> = ({
       })}
 
       {isPartnerTyping && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mt-6"
-        >
-          <div className="w-10 shrink-0">
-            <img
-              src={
-                partner?.avatar ||
-                `https://picsum.photos/seed/${partner?.uId}/100/100`
-              }
-              className="w-10 h-10 rounded-2xl object-cover opacity-50 grayscale"
-            />
+        <div className="flex items-center gap-3 px-4 md:px-12 mt-4">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+            <div className="flex gap-1">
+              {[0, 0.2, 0.4].map((d) => (
+                <motion.div
+                  key={d}
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ repeat: Infinity, duration: 0.6, delay: d }}
+                  className="w-1 h-1 bg-blue-400 rounded-full"
+                />
+              ))}
+            </div>
           </div>
-          <div className="bg-slate-50 px-5 py-4 rounded-3xl rounded-bl-none border border-slate-100/50 flex gap-1.5 items-center">
-            {[0, 0.2, 0.4].map((delay) => (
-              <motion.div
-                key={delay}
-                animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
-                transition={{ repeat: Infinity, duration: 1, delay }}
-                className="w-1.5 h-1.5 bg-blue-400 rounded-full"
-              />
-            ))}
-          </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

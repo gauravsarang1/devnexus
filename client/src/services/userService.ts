@@ -14,6 +14,21 @@ export interface ProfileUserData  extends User {
   status?: string | null;
 }
 
+export interface DashboardRecentChatMessage {
+
+}
+
+export interface ResentChat {
+  id: string,
+  participants: {
+    id: string
+    name: string
+    avatar: string
+  }
+  messages: Message
+  updatedAt: string
+}
+
 export interface DashboardActivity {
   hasActivity: boolean;
   pendingRequests: number;
@@ -56,6 +71,7 @@ export const userService = {
 
   getDashboardActivity: async (): Promise<DashboardActivity> => {
     const response = await apiClient.get<DashboardResponse>('/users/activity');
+    console.log("Dashboard", response.data.data)
     return response.data.data;
   },
 

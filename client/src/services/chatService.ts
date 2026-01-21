@@ -33,8 +33,18 @@ export const chatService = {
     return response.data.data;
   },
 
+  editMessage: async (messageId: string, newText: string): Promise<ChatMessage> => {
+    const response = await apiClient.put<MessageResponse>(`/messages/${messageId}`, { newText });
+    return response.data.data;
+  },
+
   markChatAsSeen: async (chatId: string): Promise<BaseApiResponse<null>> => {
     const response = await apiClient.post<BaseApiResponse<null>>(`/messages/chat/${chatId}/seen`);
+    return response.data;
+  },
+
+  deleteMessage: async (messageId: string): Promise<BaseApiResponse<null>> => {
+    const response = await apiClient.delete<BaseApiResponse<null>>(`/messages/${messageId}`);
     return response.data;
   }
 };

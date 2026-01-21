@@ -1,4 +1,4 @@
-import { ChatMessage, SocketTypingPayload } from '../../types';
+import { ChatMessage, SocketTypingPayload, MessageStatus } from '../../types';
 
 export const handleIncomingMessage = (
     msg: ChatMessage,
@@ -27,7 +27,7 @@ export const handleIncomingMessage = (
         );
 
         if (msg.senderId !== currentUserId) {
-            updateReadStatus(msg.id);
+            updateReadStatus(msg.id, 'READ');
         }
 
         stopTyping();
