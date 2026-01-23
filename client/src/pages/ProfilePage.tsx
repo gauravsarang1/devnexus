@@ -14,10 +14,13 @@ import { mediaService } from "../services/mediaService";
 import { fetchCurrentUser } from "../store/slices/authSlice";
 import { AppDispatch } from "../store";
 import { toast } from "sonner";
-import { User, SkillLevel, SkillRole, Skill } from "../types";
+import { User, SkillLevel, SkillRole, Skill, Review } from "../types";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import ProfileSkeleton from "../components/skeleton/ProfileSkeleton";
+import ReviewsSection from "../components/Profile/ReviewsSection";
+import ReviewForm from "../components/Profile/ReviewForm";
+import { reviewService } from "../services/reviewService";
 
 const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
@@ -32,9 +35,12 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
   const [isAddingSkill, setIsAddingSkill] = useState<SkillRole | null>(null);
   const [editData, setEditData] = useState({ name: "", bio: "" });
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [stats, setStats] = useState<any>({});
+  const [canReview, setCanReview] = useState(false);
 
   const currentUser: User | null = useSelector(
-    (state: RootState) => state.auth.user
+    (state: RootState) => state.auth.user,
   );
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -48,28 +54,52 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
     const init = async () => {
       setIsLoading(true);
       try {
+        let profileUser: ProfileUserData | null = null;
+
         if (profileUid && profileUid !== currentUser?.uId) {
-          const data = await userService.getProfile(profileUid);
-          setUser(data);
-          const mutual = await matchService.getMutualSkills(data.id);
+          profileUser = await userService.getProfile(profileUid);
+          setUser(profileUser);
+          setCanReview(!profileUser?.hasReviewed);
+          
+          const mutual = await matchService.getMutualSkills(profileUser.id);
           setMutualSkills(mutual);
-        } else {
-          if (currentUser) {
-            setUser(currentUser);
-            setEditData({ name: currentUser.name, bio: currentUser.bio || "" });
-            navigate("/profile");
-          }
+        } else if (currentUser) {
+          profileUser = currentUser;
+          setUser(currentUser);
+          setEditData({ name: currentUser.name, bio: currentUser.bio || "" });
         }
+
+        if (profileUser) {
+          const [reviewsRes, statsRes] = await Promise.all([
+            reviewService.getReviewsForProfile(profileUser.id),
+            reviewService.getStats(profileUser.id),
+          ]);
+
+          setReviews(reviewsRes.reviews ?? []);
+          setStats(statsRes);
+        }
+
         const skillsData = await skillService.getAllSkills();
         setAllSkills(skillsData.skills);
-      } catch (err) {
-        toast.error("Failed to load profile");
       } finally {
         setIsLoading(false);
       }
     };
+
     init();
-  }, [profileUid]);
+  }, [profileUid, currentUser]);
+
+  // Function to refresh reviews after posting
+  const handleReviewSuccess = async () => {
+    if (!user) return;
+    const [reviewsRes, statsRes] = await Promise.all([
+      reviewService.getReviewsForProfile(user.id),
+      reviewService.getStats(user.id),
+    ]);
+    setReviews(reviewsRes.reviews);
+    setStats(statsRes);
+    setCanReview(false);
+  };
 
   const handleUpdateProfile = async () => {
     if (!user) return;
@@ -80,8 +110,6 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
       setIsEditing(false);
       if (isOwnProfile) dispatch(fetchCurrentUser());
       toast.success("Profile updated!");
-    } catch (err) {
-      toast.error("Update failed");
     } finally {
       setIsUpdating(false);
     }
@@ -89,7 +117,7 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: "avatar" | "bg"
+    type: "avatar" | "bg",
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -102,8 +130,6 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
       setUser((prev) => (prev ? { ...prev, ...updateData } : null));
       if (isOwnProfile) dispatch(fetchCurrentUser());
       toast.success(`${type === "avatar" ? "Photo" : "Banner"} updated!`);
-    } catch (err) {
-      toast.error("Upload failed");
     } finally {
       setIsUploading(null);
     }
@@ -112,36 +138,28 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
   const handleSkillAction = async (
     id: string,
     action: "remove" | "update",
-    level?: SkillLevel
+    level?: SkillLevel,
   ) => {
-    try {
-      if (action === "remove") await skillService.removeUserSkill(id);
-      else if (level) await skillService.updateUserSkill(id, level);
-      dispatch(fetchCurrentUser());
-    } catch (err) {
-      toast.error("Action failed");
-    }
+    if (action === "remove") await skillService.removeUserSkill(id);
+    else if (level) await skillService.updateUserSkill(id, level);
+    dispatch(fetchCurrentUser());
   };
 
   const handleAddSkill = async (
     skill: Skill | { name: string; isNew: boolean },
-    level: SkillLevel
+    level: SkillLevel,
   ) => {
     if (!isAddingSkill) return;
-    try {
-      const isNew = "isNew" in skill;
-      await skillService.addUserSkill({
-        skillId: isNew ? undefined : (skill as Skill).id,
-        skillName: isNew ? (skill as any).name : undefined,
-        role: isAddingSkill,
-        level,
-      });
-      setIsAddingSkill(null);
-      dispatch(fetchCurrentUser());
-      toast.success("Skill added!");
-    } catch (err) {
-      toast.error("Failed to add skill");
-    }
+    const isNew = "isNew" in skill;
+    await skillService.addUserSkill({
+      skillId: isNew ? undefined : (skill as Skill).id,
+      skillName: isNew ? (skill as any).name : undefined,
+      role: isAddingSkill,
+      level,
+    });
+    setIsAddingSkill(null);
+    dispatch(fetchCurrentUser());
+    toast.success("Skill added!");
   };
 
   return (
@@ -165,6 +183,14 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
               bgInputRef={bgInputRef}
               avatarInputRef={avatarInputRef}
             />
+
+            {/* New Review Form Logic */}
+            {canReview && user && (
+              <ReviewForm
+                reviewedUserId={user.id}
+                onSuccess={handleReviewSuccess}
+              />
+            )}
 
             {profileUid && mutualSkills.length > 0 && (
               <motion.div
@@ -285,6 +311,9 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
             </div>
           </>
         )}
+
+        {/* Reviews Display */}
+      <ReviewsSection reviews={reviews} stats={stats} />
       </main>
 
       <AnimatePresence>
@@ -297,6 +326,7 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
           />
         )}
       </AnimatePresence>
+
       <MobileNav navigate={navigate} />
     </div>
   );

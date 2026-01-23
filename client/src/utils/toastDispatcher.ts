@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { debounce } from "../utils/debounce";
+import { debounce } from "./debounce";
 
 export const showToast = debounce(
     (type: string, title: string, message: string) => {

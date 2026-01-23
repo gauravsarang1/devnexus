@@ -13,9 +13,9 @@ import { RootState } from "../store";
 const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
   navigate,
 }) => {
-  const [activeTab, setActiveTab] = useState<
-    "Incoming" | "Sent" | "Active"
-  >("Incoming");
+  const [activeTab, setActiveTab] = useState<"Incoming" | "Sent" | "Active">(
+    "Incoming",
+  );
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -40,7 +40,7 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
 
       if (node) observer.current.observe(node);
     },
-    [isLoading, isFetchingMore, hasMore]
+    [isLoading, isFetchingMore, hasMore],
   );
 
   const fetchMatches = async (pageNum: number, initial = false) => {
@@ -49,11 +49,9 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
     try {
       const res = await matchService.getMatches(activeTab, pageNum, 10);
       setMatches((prev) =>
-        pageNum === 1 ? res.matches : [...prev, ...res.matches]
+        pageNum === 1 ? res.matches : [...prev, ...res.matches],
       );
       setHasMore(res.pagination.hasNextPage);
-    } catch {
-      toast.error("Failed to load matches");
     } finally {
       setIsLoading(false);
       setIsFetchingMore(false);
@@ -72,16 +70,12 @@ const MatchesPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   const handleUpdateStatus = async (
     matchId: string,
-    status: "ACCEPTED" | "DECLINED"
+    status: "ACCEPTED" | "DECLINED",
   ) => {
-    try {
-      await matchService.updateStatus(matchId, status);
-      toast.success(`Request ${status.toLowerCase()}!`);
-      setPage(1);
-      fetchMatches(1, true);
-    } catch {
-      toast.error("Action failed");
-    }
+    await matchService.updateStatus(matchId, status);
+    toast.success(`Request ${status.toLowerCase()}!`);
+    setPage(1);
+    fetchMatches(1, true);
   };
 
   /* ------------------ UI ------------------ */

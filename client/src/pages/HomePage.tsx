@@ -30,8 +30,6 @@ const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
         if (res) {
           setActivity(res);
         }
-      } catch (err) {
-        console.error("Failed to load dashboard data", err);
       } finally {
         setIsActivityLoading(false);
       }

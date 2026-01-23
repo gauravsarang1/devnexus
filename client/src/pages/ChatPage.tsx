@@ -134,8 +134,6 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
       setChats((prev) => [...(prev ?? []), ...(res?.chats ?? [])]);
       setChatsPage(nextPage);
       setHasMoreChats(res?.pagination?.hasNextPage ?? false);
-    } catch (err) {
-      console.error(err);
     } finally {
       setIsFetchingMoreChats(false);
     }
@@ -303,20 +301,16 @@ const ChatPage: React.FC<{ navigate: (to: string) => void }> = ({
 
     const ids = selectedMessages.map((m) => m.id);
 
-    try {
-      setIsDeleteting(true);
+    setIsDeleteting(true);
 
-      await Promise.all(ids.map((id) => chatService.deleteMessage(id))).then(
-        () => setIsDeleteting(false),
-      );
+    await Promise.all(ids.map((id) => chatService.deleteMessage(id))).then(() =>
+      setIsDeleteting(false),
+    );
 
-      setMessages((prev) => prev.filter((m) => !ids.includes(m.id)));
+    setMessages((prev) => prev.filter((m) => !ids.includes(m.id)));
 
-      setSelectedMessages([]);
-      setEditingMessage(null);
-    } catch (err) {
-      toast.error("Failed to delete messages");
-    }
+    setSelectedMessages([]);
+    setEditingMessage(null);
   };
 
   const selectedPartner = selectedChat?.participants.find(

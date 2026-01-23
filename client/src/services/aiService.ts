@@ -1,39 +1,68 @@
 import apiClient from './apiClient';
 import { BaseApiResponse } from '../utils/apiResponse';
+import { unwrap } from '../utils/apiHelper';
 
-export interface UidSuggestionsResponse extends BaseApiResponse<string[]> {}
-export interface RefinementResponse extends BaseApiResponse<{ refined: string }> {}
-export interface AssistantResponse extends BaseApiResponse<{ answer: string }> {}
-export interface SearchSuggestionsResponse extends BaseApiResponse<string[]> {}
+export type UidSuggestionsResponse = BaseApiResponse<string[]>;
+export type SearchSuggestionsResponse = BaseApiResponse<string[]>;
+export type RefinementResponse = BaseApiResponse<{ refined: string }>;
+export type AssistantResponse = BaseApiResponse<{ answer: string }>;
 
 export const aiService = {
-  suggestUid: async (input: string): Promise<UidSuggestionsResponse> => {
-    const response = await apiClient.post<UidSuggestionsResponse>('/ai/suggest-uid', { input });
-    return response.data;
+  suggestUid: async (input: string): Promise<string[]> =>
+    unwrap(
+      await apiClient.post<UidSuggestionsResponse>(
+        '/ai/suggest-uid',
+        { input }
+      )
+    ),
+
+  suggestSearch: async (query: string): Promise<string[]> =>
+    unwrap(
+      await apiClient.post<SearchSuggestionsResponse>(
+        '/ai/suggest-search',
+        { query }
+      )
+    ),
+
+  refineBio: async (name: string, bio: string): Promise<string> => {
+    const { refined } = unwrap(
+      await apiClient.post<RefinementResponse>(
+        '/ai/refine-bio',
+        { name, bio }
+      )
+    );
+    return refined;
   },
 
-  suggestSearch: async (query: string): Promise<SearchSuggestionsResponse> => {
-    const response = await apiClient.post<SearchSuggestionsResponse>('/ai/suggest-search', { query });
-    return response.data;
+  refineMessage: async (text: string): Promise<string> => {
+    const { refined } = unwrap(
+      await apiClient.post<RefinementResponse>(
+        '/ai/refine-message',
+        { text }
+      )
+    );
+    return refined;
   },
 
-  refineBio: async (name: string, bio: string): Promise<RefinementResponse> => {
-    const response = await apiClient.post<RefinementResponse>('/ai/refine-bio', { name, bio });
-    return response.data;
+  askAssistant: async (question: string): Promise<string> => {
+    const { answer } = unwrap(
+      await apiClient.post<AssistantResponse>(
+        '/ai/ask-assistant',
+        { question }
+      )
+    );
+    return answer;
   },
 
-  refineMessage: async (text: string): Promise<RefinementResponse> => {
-    const response = await apiClient.post<RefinementResponse>('/ai/refine-message', { text });
-    return response.data;
+  coachChat: async (
+    messages: { role: string; content: string }[]
+  ): Promise<string> => {
+    const { answer } = unwrap(
+      await apiClient.post<AssistantResponse>(
+        '/ai/coach',
+        { messages }
+      )
+    );
+    return answer;
   },
-
-  askAssistant: async (question: string): Promise<AssistantResponse> => {
-    const response = await apiClient.post<AssistantResponse>('/ai/ask-assistant', { question });
-    return response.data;
-  },
-
-  coachChat: async (messages: { role: string, content: string }[]): Promise<AssistantResponse> => {
-    const response = await apiClient.post<AssistantResponse>('/ai/coach', { messages });
-    return response.data;
-  }
 };

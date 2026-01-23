@@ -1,24 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, ArrowLeft, Loader2, CheckCircle2, ShieldCheck, RefreshCw, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import { authService } from '../services/authService';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Mail,
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  ShieldCheck,
+  RefreshCw,
+  AlertCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import { authService } from "../services/authService";
 
 interface VerifyOtpPageProps {
   navigate: (to: string) => void;
 }
 
 const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
-  const [otp, setOtp] = useState<string[]>(new Array(6).fill(''));
+  const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
   const [activeInput, setActiveInput] = useState(0);
   const [timer, setTimer] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Use URL search params instead of localStorage for stateless email flow
   const urlParams = new URLSearchParams(window.location.search);
-  const userEmail = urlParams.get('email') || 'your email';
+  const userEmail = urlParams.get("email") || "your email";
 
   useEffect(() => {
     if (timer > 0) {
@@ -37,7 +45,7 @@ const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
     const newOtp = [...otp];
     newOtp[index] = value.substring(value.length - 1);
     setOtp(newOtp);
-    setStatus('idle');
+    setStatus("idle");
 
     if (value && index < 5) {
       setActiveInput(index + 1);
@@ -45,37 +53,35 @@ const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       setActiveInput(index - 1);
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleVerify = async () => {
-    const fullOtp = otp.join('');
+    const fullOtp = otp.join("");
     if (fullOtp.length < 6) return;
 
     setIsLoading(true);
     try {
       const res = await authService.verifyOtp(userEmail, fullOtp);
-      if (res.success) {
-        setStatus('success');
-        toast.success('Account verified!');
-        setTimeout(() => navigate('/login'), 1500);
-      } else {
-        setStatus('error');
-        toast.error(res.message);
-      }
+
+      setStatus("success");
+      toast.success("Account verified!");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err: any) {
-      setStatus('error');
-      toast.error(err.response?.data?.message || 'Verification failed');
+      setStatus("error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isOtpComplete = otp.every(digit => digit !== '');
+  const isOtpComplete = otp.every((digit) => digit !== "");
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center items-center px-4 py-8 sm:p-4 relative overflow-hidden">
@@ -84,7 +90,7 @@ const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
       <motion.button
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate('/register')}
+        onClick={() => navigate("/register")}
         className="absolute top-4 left-4 sm:top-8 sm:left-8 flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold transition-colors"
       >
         <ArrowLeft size={20} /> Back
@@ -125,7 +131,9 @@ const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
             {otp.map((digit, index) => (
               <input
                 key={index}
-                ref={el => { inputRefs.current[index] = el; }}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
                 type="text"
                 maxLength={1}
                 value={digit}
@@ -137,12 +145,13 @@ const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
               text-center text-xl sm:text-2xl font-black
               rounded-xl sm:rounded-2xl
               border-2 transition-all outline-none
-              ${activeInput === index
-                    ? 'border-blue-500'
-                    : status === 'error'
-                      ? 'border-red-200 bg-red-50 text-red-600'
-                      : 'border-slate-100 bg-slate-50'
-                  }
+              ${
+                activeInput === index
+                  ? "border-blue-500"
+                  : status === "error"
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-slate-100 bg-slate-50"
+              }
             `}
               />
             ))}
@@ -150,31 +159,31 @@ const VerifyOtpPage: React.FC<VerifyOtpPageProps> = ({ navigate }) => {
 
           <button
             onClick={handleVerify}
-            disabled={!isOtpComplete || isLoading || status === 'success'}
+            disabled={!isOtpComplete || isLoading || status === "success"}
             className={`
           w-full py-3.5 sm:py-4
           rounded-2xl sm:rounded-3xl
           font-black text-base sm:text-lg
           shadow-lg sm:shadow-xl
           transition-all flex items-center justify-center gap-2
-          ${isLoading
-                ? 'bg-blue-400'
-                : isOtpComplete && status !== 'success'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-400'
-              }
+          ${
+            isLoading
+              ? "bg-blue-400"
+              : isOtpComplete && status !== "success"
+                ? "bg-blue-600 text-white"
+                : "bg-slate-100 text-slate-400"
+          }
         `}
           >
             {isLoading ? (
               <Loader2 className="animate-spin" size={22} />
             ) : (
-              'Verify Email'
+              "Verify Email"
             )}
           </button>
         </div>
       </motion.div>
     </div>
-
   );
 };
 

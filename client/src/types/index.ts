@@ -38,6 +38,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   isConnected?: boolean;
+  hasReviewed: boolean | null
   isCurrentUser?: boolean;
 }
 
@@ -112,4 +113,21 @@ export interface SocketTypingPayload {
   chatId: string;
   userId: string;
   isTyping: boolean;
+}
+
+export interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  reviewerId: string;
+  reviewedUserId: string;
+  reviewer?: Partial<User>;
+  reviewedUser?: Partial<User>
+  createdAt?: string
+}
+
+export interface CreateReviewDTO {
+  rating?: number;
+  reviewedUserId: string;
+  comment?: string;
 }

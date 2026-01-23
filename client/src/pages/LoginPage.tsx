@@ -26,7 +26,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!emailORuId || !password) {
       toast.error('Please fill in all fields.');
       return;
@@ -35,23 +35,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
     setIsLoading(true);
 
     try {
-      const response = await authService.login(emailORuId, password);
-      if (response.success && response.data.accessToken) {
-        dispatch(setToken(response.data.accessToken));
-        toast.success('Welcome back to SkillSwap!');
-        // Small delay to ensure state is committed before potentially losing context on redirect
-        setTimeout(() => {
-           window.location.href = '/home';
-        }, 100);
-      } else {
-        toast.error(response.message || 'Login failed');
-      }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Invalid credentials');
+      const { accessToken } = await authService.login(emailORuId, password);
+
+      dispatch(setToken(accessToken));
+      toast.success('Welcome back to SkillSwap');
+      navigate('/home');
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 relative overflow-hidden">
@@ -140,11 +133,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/10 ${
-              isLoading 
-                ? 'bg-blue-400 text-white cursor-not-allowed' 
+            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/10 ${isLoading
+                ? 'bg-blue-400 text-white cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98]'
-            }`}
+              }`}
           >
             {isLoading ? <Loader2 className="animate-spin" size={24} /> : 'Login'}
           </button>
@@ -153,7 +145,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
         <div className="mt-8 text-center">
           <p className="text-slate-500 text-sm">
             Don't have an account?{' '}
-            <button 
+            <button
               onClick={() => navigate('/register')}
               className="text-blue-600 font-bold hover:underline"
             >
@@ -164,7 +156,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
       </motion.div>
 
       {/* Trust Badge */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}

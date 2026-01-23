@@ -1,7 +1,8 @@
 
-import axios from 'axios';
+import axios, {AxiosError} from 'axios';
 import { store } from '../store';
 import { logout } from '../store/slices/authSlice';
+import { toast } from 'sonner';
 
 // Base URL points to the backend server
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -30,12 +31,31 @@ apiClient.interceptors.request.use(
 
 // Response Interceptor: Handle auth errors
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Clear Redux state on authentication failure
-      store.dispatch(logout());
+  (response) => {
+    const { success, error } = response.data || {};
+
+    // Backend-level failure (200 but success=false)
+    if (success === false) {
+      toast.error(error?.message || 'Something went wrong');
+      return Promise.reject(error);
     }
+
+    return response;
+  },
+  (error: AxiosError<any>) => {
+    // Network / server / auth errors
+    const message =
+      error.response?.data?.error?.message ||
+      error.message ||
+      'Network error';
+
+    toast.error(message);
+
+    // Optional: global auth handling
+    if (error.response?.status === 401) {
+        store.dispatch(logout());
+    }
+
     return Promise.reject(error);
   }
 );

@@ -1,50 +1,71 @@
 import apiClient from './apiClient';
+import { unwrap } from '../utils/apiHelper';
 import { Chat, ChatMessage } from '../types';
 import { BaseApiResponse, PaginatedResponse } from '../utils/apiResponse';
 
 export type ChatsPaginatedResponse = PaginatedResponse<Chat, 'chats'>;
 export type MessagesPaginatedResponse = PaginatedResponse<ChatMessage, 'messages'>;
-export type MessageResponse = BaseApiResponse<ChatMessage>;
-export type ChatCreateResponse = BaseApiResponse<Chat>;
 
 export const chatService = {
-  getChats: async (page = 1, limit = 15): Promise<ChatsPaginatedResponse['data']> => {
-    const response = await apiClient.get<ChatsPaginatedResponse>(`/chats?page=${page}&limit=${limit}`);
-    return response.data.data;
+  getChats: async (page = 1, limit = 15) => {
+    const res = await apiClient.get<ChatsPaginatedResponse>(
+      `/chats?page=${page}&limit=${limit}`
+    );
+    return res.data.data;
   },
 
-  getMessages: async (chatId: string, page = 1, limit = 30): Promise<MessagesPaginatedResponse['data']> => {
-    const response = await apiClient.get<MessagesPaginatedResponse>(`/messages/chat/${chatId}?page=${page}&limit=${limit}`);
-    return response.data.data;
+  getMessages: async (chatId: string, page = 1, limit = 30) => {
+    const res = await apiClient.get<MessagesPaginatedResponse>(
+      `/messages/chat/${chatId}?page=${page}&limit=${limit}`
+    );
+    return res.data.data;
   },
 
-  sendMessage: async (chatId: string, text: string): Promise<ChatMessage> => {
-    const response = await apiClient.post<MessageResponse>('/messages', { chatId, text });
-    return response.data.data;
-  },
+  sendMessage: async (chatId: string, text: string) =>
+    unwrap(
+      await apiClient.post<BaseApiResponse<ChatMessage>>('/messages', {
+        chatId,
+        text,
+      })
+    ),
 
-  createChat: async (participantsIds: string[]): Promise<Chat> => {
-    const response = await apiClient.post<ChatCreateResponse>('/chats', { participantsIds });
-    return response.data.data;
-  },
+  createChat: async (participantsIds: string[]) =>
+    unwrap(
+      await apiClient.post<BaseApiResponse<Chat>>('/chats', {
+        participantsIds,
+      })
+    ),
 
-  updateMessageStatus: async (messageId: string, status: 'SENT' | 'DELIVERED' | 'READ'): Promise<ChatMessage> => {
-    const response = await apiClient.put<MessageResponse>(`/messages/${messageId}/change-status`, { status });
-    return response.data.data;
-  },
+  updateMessageStatus: async (
+    messageId: string,
+    status: 'SENT' | 'DELIVERED' | 'READ'
+  ) =>
+    unwrap(
+      await apiClient.put<BaseApiResponse<ChatMessage>>(
+        `/messages/${messageId}/change-status`,
+        { status }
+      )
+    ),
 
-  editMessage: async (messageId: string, newText: string): Promise<ChatMessage> => {
-    const response = await apiClient.put<MessageResponse>(`/messages/${messageId}`, { newText });
-    return response.data.data;
-  },
+  editMessage: async (messageId: string, newText: string) =>
+    unwrap(
+      await apiClient.put<BaseApiResponse<ChatMessage>>(
+        `/messages/${messageId}`,
+        { newText }
+      )
+    ),
 
-  markChatAsSeen: async (chatId: string): Promise<BaseApiResponse<null>> => {
-    const response = await apiClient.post<BaseApiResponse<null>>(`/messages/chat/${chatId}/seen`);
-    return response.data;
-  },
+  markChatAsSeen: async (chatId: string) =>
+    unwrap(
+      await apiClient.post<BaseApiResponse<null>>(
+        `/messages/chat/${chatId}/seen`
+      )
+    ),
 
-  deleteMessage: async (messageId: string): Promise<BaseApiResponse<null>> => {
-    const response = await apiClient.delete<BaseApiResponse<null>>(`/messages/${messageId}`);
-    return response.data;
-  }
+  deleteMessage: async (messageId: string) =>
+    unwrap(
+      await apiClient.delete<BaseApiResponse<null>>(
+        `/messages/${messageId}`
+      )
+    ),
 };

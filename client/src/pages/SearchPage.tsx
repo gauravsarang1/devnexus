@@ -35,7 +35,7 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
 
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState(
-    isSuggestionMode ? "People" : "All"
+    isSuggestionMode ? "People" : "All",
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
@@ -66,7 +66,7 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
 
       if (node) observer.current.observe(node);
     },
-    [isLoading, isFetchingMore, hasMore]
+    [isLoading, isFetchingMore, hasMore],
   );
 
   /* ---------------- FETCH SKILLS ---------------- */
@@ -90,11 +90,10 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
     const fetchAi = async () => {
       setIsAiLoading(true);
       try {
-        const res = await aiService.suggestSearch(query);
-        if (res.success) {
-          setAiSuggestions(res.data);
-          setShowAiDropdown(res.data.length > 0);
-        }
+        const data = await aiService.suggestSearch(query);
+
+        setAiSuggestions(data);
+        setShowAiDropdown(data.length > 0);
       } finally {
         setIsAiLoading(false);
       }
@@ -127,8 +126,6 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
         setUsers((prev) => (page === 1 ? res.users : [...prev, ...res.users]));
         console.log(res);
         setHasMore(res.pagination.hasNextPage);
-      } catch {
-        toast.error("Failed to load users");
       } finally {
         setIsLoading(false);
         setIsFetchingMore(false);
@@ -149,12 +146,8 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
   }, [query, allSkills, isSuggestionMode]);
 
   const handleConnect = async (userId: string) => {
-    try {
-      await matchService.sendRequest(userId);
-      toast.success("Swap request sent!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed");
-    }
+    await matchService.sendRequest(userId);
+    toast.success("Swap request sent!");
   };
 
   /* ---------------- UI ---------------- */

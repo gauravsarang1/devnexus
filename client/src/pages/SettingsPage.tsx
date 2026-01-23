@@ -27,7 +27,7 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
     email: "",
   });
   const { user, isLoading: authLoading } = useSelector(
-    (state: RootState) => state.auth
+    (state: RootState) => state.auth,
   );
 
   const [notifs, setNotifs] = useState({
@@ -53,8 +53,6 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
           ...prev,
           push: Notification.permission === "granted",
         }));
-      } catch (err) {
-        toast.error("Failed to load settings");
       } finally {
         setIsLoading(false);
       }
@@ -71,8 +69,6 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
     try {
       await userService.updateProfile(accountData);
       toast.success("Updated!");
-    } catch (err) {
-      toast.error("Failed");
     } finally {
       setIsSaving(false);
     }
@@ -83,25 +79,18 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
     try {
       await userService.changePassword(current, next);
       toast.success("Password changed!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.errors?.message || "Failed");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    try {
-      let isSure = confirm("Are you sure you want to delete account?");
-      if (!isSure) return;
-      const response = await authService.delete();
-      if (response.success) {
-        toast.success("Account deleted successfully");
-        navigate("/");
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.errors?.message || "Failed");
-    }
+    let isSure = confirm("Are you sure you want to delete account?");
+    if (!isSure) return;
+    const response = await authService.delete();
+
+    toast.success("Account deleted successfully");
+    navigate("/");
   };
 
   function urlBase64ToUint8Array(base64String: string) {
@@ -163,18 +152,13 @@ const SettingsPage: React.FC<{ navigate: (to: string) => void }> = ({
       await userService.savePushSubscription(sub);
       setNotifs((p) => ({ ...p, push: true }));
       toast.success("Push enabled");
-    } catch (e) {
-      console.error(e);
-      toast.error("Push failed");
     } finally {
       setIsSaving(false);
     }
   };
 
   if (isLoading) {
-    return (
-      <SettingSkeleton />
-    );
+    return <SettingSkeleton />;
   }
 
   const tabs = [
