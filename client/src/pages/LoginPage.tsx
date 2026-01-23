@@ -109,7 +109,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
           <div className="space-y-2">
             <div className="flex justify-between items-center px-1">
               <label className="text-sm font-bold text-slate-700">Password</label>
-              <button type="button" className="text-xs font-bold text-blue-600 hover:underline">Forgot Password?</button>
+              <button 
+              onClick={() => navigate('/forget-password')}
+              type="button" className="text-xs font-bold text-blue-600 hover:underline">Forgot Password?</button>
             </div>
             <div className="relative group">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />

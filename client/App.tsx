@@ -14,6 +14,7 @@ const ProfilePage = lazy(() => import('./src/pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./src/pages/SettingsPage'));
 const LoginPage = lazy(() => import('./src/pages/LoginPage'));
 const RegisterPage = lazy(() => import('./src/pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./src/pages/ForgetPasswordPage'));
 const VerifyOtpPage = lazy(() => import('./src/pages/VerifyOtpPage'));
 
 import SEO from './src/components/SEO';
@@ -65,6 +66,7 @@ const App: React.FC = () => {
         <Route path="/login" element={<><SEO title="Login" /><LoginPage navigate={navigate} /></>} />
         <Route path="/register" element={<><SEO title="Join the Community" /><RegisterPage navigate={navigate} /></>} />
         <Route path="/verify-otp" element={<><SEO title="Verify Email" /><VerifyOtpPage navigate={navigate} /></>} />
+        <Route path="/forget-password" element={<><SEO title='Forget Password'/><ForgotPasswordPage navigate={navigate}/></>}/>
 
         {/* Protected */}
         <Route element={<ProtectedRoute navigate={navigate}/>}>

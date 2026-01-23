@@ -52,6 +52,16 @@ export const authService = {
       await apiClient.post<SimpleResponse>('/auth/logout')
     ),
 
+  requestForgetPasswordOTP: async (emailORuId: string): Promise<null> => 
+    unwrap(
+      await apiClient.get<SimpleResponse>(`/auth/request-forget-password-otp/${emailORuId}`)
+    ),
+
+    forgetPasswordWithOTP: async (emailORuId: string, data: {otp: string, password: string}): Promise<null> =>
+      unwrap(
+        await apiClient.post<SimpleResponse>(`/auth/verify-forget-password-otp/${emailORuId}`, data)
+      ),
+
   delete: async (): Promise<null> =>
     unwrap(
       await apiClient.delete<SimpleResponse>('/auth/delete')
