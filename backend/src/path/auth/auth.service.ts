@@ -233,6 +233,78 @@ export class authService {
         return null;
     }
 
+    static async requestForgetPasswordOTP(emailORuId: string): Promise<any> {
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { uId: emailORuId },
+                    { email: emailORuId }
+                ]
+            }
+        });
+
+        if(!user) throw new NotFoundError("User not found");
+
+        const otp = generate6DigitOtp();
+        if (!otp) {
+            throw new BadRequestError("Failed to generate otp!");
+        }
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                otp,
+                otpExpiry
+            }
+        });
+
+        AuthNotifier.verifyForgetPasswordMail({
+            name: user.name,
+            email: user.email,
+            otp
+        });
+
+        return null;
+    }
+
+    static async forgetPassword(emailORuId: string, otp: string, password: string): Promise<any> {
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { uId: emailORuId },
+                    { email: emailORuId }
+                ]
+            }
+        });
+
+        if (!user) throw new NotFoundError("User not found");
+        if (user.otp !== otp) throw new BadRequestError("Invalid OTP");
+        if (user.otpExpiry! < new Date()) throw new BadRequestError("OTP has expired");
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        await prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                otp: null,
+                otpExpiry: null,
+                password: hashedPassword
+            }
+        });
+
+        AuthNotifier.passwordResetSuccessMail({
+            name: user.name,
+            email: user.email
+        });
+
+        return null;
+    }
+
     static async refreshToken(token: string | undefined): Promise<AuthTokenResponse> {
         if (!token) throw new BadRequestError("No token provided");
         const payload = verifyRefreshToken(token) as JwtPayload;

@@ -7,15 +7,15 @@ export const validate =
     (schema: ZodObject) => (req: Request, _res: Response, next: NextFunction) => {
         try {
             // Cast req to any to assign custom 'validated' property and access body/params/query
-            (req as any).validated = schema.parse({
-                body: (req as any).body,
-                params: (req as any).params,
-                query: (req as any).query,
+            req.validated = schema.parse({
+                body: req.body,
+                params: req.params,
+                query: req.query,
             });
             // Cast next to any to resolve "no call signatures" error
-            (next as any)();
+            next();
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
+            next(error);
         }
     };

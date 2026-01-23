@@ -76,7 +76,7 @@ export interface UserProfile {
   id: string;
   uId?: string | null;
   email: string;
-  password: string;
+  password?: string;
   name: string;
   bio?: string | null;
   isEmailVerified: boolean;
@@ -116,12 +116,24 @@ export interface Skill {
 export interface UserProfileWithStatus extends UserProfile {
   status: MatchStatus | null;
   isConnected: boolean;
+  hasReviewed: boolean | null;
+}
+
+export interface ResendChat extends Partial<Chat>{
+  messages: {
+    text: true
+  }[]
+  participants: {
+    name: string
+    id: string
+    avatar?: string
+  }[],
 }
 
 export interface UserDashboardActivity {
   hasActivity: boolean;
   pendingRequests: number;
-  recentChats: ChatPreview[];
+  recentChats: ResendChat[];
   trendingSkills: PrismaSkill[];
   suggestions: UserProfile[];
   unreadNotificationsCount: number;
@@ -427,6 +439,7 @@ export interface ReviewResponse {
   createdAt: Date;
   reviewer: {
     id: string;
+    uId: string;
     name: string;
     avatar?: string | null;
   };

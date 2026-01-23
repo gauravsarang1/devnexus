@@ -4,11 +4,11 @@ import { BadRequestError } from '../../errors/BadRequestError.js';
 import { NotFoundError } from '../../errors/NotFoundError.js';
 import { getCache, setCache } from "../../utils/cache.js";
 import {
-  CreateChatDTO,
-  ChatDetail,
-  ChatPreview,
-  AllChatsResponse,
-  UserProfilePreview,
+    CreateChatDTO,
+    ChatDetail,
+    ChatPreview,
+    AllChatsResponse,
+    UserProfilePreview,
 } from "../../types/service.types.js";
 
 export class ChatService {
@@ -38,7 +38,7 @@ export class ChatService {
         return chat as ChatPreview;
     }
 
-        static async getChatById(
+    static async getChatById(
         id: string,
         userId: string
     ): Promise<ChatDetail> {
@@ -47,7 +47,18 @@ export class ChatService {
             include: {
                 participants: {
                     include: {
-                        user: { select: { name: true, photo: true, uId: true, id: true } },
+                        user: {
+                            select: {
+                                name: true, photo: {
+                                    where: {
+                                        type: 'AVATAR'
+                                    },
+                                    take: 1
+                                }, 
+                                uId: true, 
+                                id: true
+                            }
+                        },
                     },
                 },
                 messages: {
@@ -65,7 +76,7 @@ export class ChatService {
             ...chat,
             participants: chat.participants.map(({ user }) => ({
                 ...user,
-                avatar: user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
+                avatar: user.photo[0].url ?? null,
             })),
         };
 
@@ -101,7 +112,12 @@ export class ChatService {
                             user: {
                                 select: {
                                     name: true,
-                                    photo: true,
+                                    photo: {
+                                        where: {
+                                            type: 'AVATAR',
+                                        },
+                                        take: 1
+                                    },
                                     uId: true,
                                     id: true,
                                 },
@@ -128,7 +144,7 @@ export class ChatService {
             participants: participants.map(({ user }) => ({
                 ...user,
                 avatar:
-                    user.photo?.find((img) => img.type === "AVATAR")?.url ?? null,
+                    user.photo[0].url ?? null,
             })),
         }));
 

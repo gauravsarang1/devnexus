@@ -9,14 +9,14 @@ export const reviewController = {
     createReview: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Cast req to any to access custom userId and validated properties
-            const reviewerId = (req as any).userId!;
-            const body = (req as any).validated!.body!;
+            const reviewerId = req.userId!;
+            const body = req.validated!.body!;
 
-            const data = await ReviewService.createReview(body);
+            const data = await ReviewService.createReview(reviewerId, body);
             return successResponse(res, data, "Review created successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
+            next(error);
         }
     },
 
@@ -24,13 +24,13 @@ export const reviewController = {
     getReviews: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Cast req to any to access custom validated property
-            const query = (req as any).validated!.query!
+            const query = req.validated!.query!
 
             const data = await ReviewService.getReviews(query);
             return successResponse(res, data, "Reviews fetched successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
+            next(error);
         }
     },
 
@@ -38,60 +38,47 @@ export const reviewController = {
     getReviewById: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Cast req to any to access custom validated property
-            const { reviewId } = (req as any).validated!.params!;
+            const { reviewId } = req.validated!.params!;
 
             const data = await ReviewService.getReviewById(reviewId);
             return successResponse(res, data, "Review fetched successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
+            next(error);
         }
     },
 
-    // GET REVIEWS BY REVIEWER ID
-    getReviewsByReviewerId: async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            // Cast req to any to access custom validated property
-            const { reviewerId } = (req as any).validated!.params!;
-            const query = (req as any).validated!.query!;
+    getAllUserReviews: async (req: Request, res: Response, next: NextFunction) => {
+        const {userId} = req.validated?.params;
+        const query = req.validated!.query;
+        const currentUserId = req.userId!;
 
-            const data = await ReviewService.getReviewsByReviewerId(reviewerId, query);
-            return successResponse(res, data, "Reviews fetched successfully");
-        } catch (error) {
-            // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
-        }
+        const result = await ReviewService.getAllUserReviews(userId, currentUserId, query);
+        return successResponse(res, result, "Reviews retrieved successfully");
     },
 
-    // GET REVIEWS BY REVIEWED USER ID
-    getReviewsByReviewedUserId: async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            // Cast req to any to access standard params and custom validated properties
-            const { reviewedUserId } = (req as any).params;
-            const query = (req as any).validated!.query!;
+    getStats: async (req: Request, res: Response, next: NextFunction) => {
+        const {userId} = req.validated?.params;
+        const currentUserId = req.userId!;
 
-            const data = await ReviewService.getReviewsByReviewedUserId(reviewedUserId, query);
-            return successResponse(res, data, "Reviews fetched successfully");
-        } catch (error) {
-            // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
-        }
+        const result = await ReviewService.getStats(userId, currentUserId);
+        return successResponse(res, result, "Stats retrieved successfully"); 
     },
 
     // EDIT REVIEW
     editReview: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Cast req to any to access custom userId and validated properties
-            const reviewerId = (req as any).userId!;
+            const reviewerId = req.userId!;
 
-            const { reviewId } = (req as any).validated!.params!;
-            const data = (req as any).validated!.body!;
+            const { reviewId } = req.validated!.params!;
+            const data = req.validated!.body!;
 
             const result = await ReviewService.editReview(reviewId,reviewerId, data);
             return successResponse(res, result, "Review updated successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
+            next(error);
         }
     },
 
@@ -99,15 +86,15 @@ export const reviewController = {
     deleteReview: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Cast req to any to access custom userId and validated properties
-            const currentUser = (req as any).userId!;
+            const currentUser = req.userId!;
 
-            const { reviewId } = (req as any).validated!.params!;
+            const { reviewId } = req.validated!.params!;
 
             await ReviewService.deleteReview(reviewId, currentUser);
             return successResponse(res, null, "Review deleted successfully");
         } catch (error) {
             // Cast next to any to resolve "no call signatures" error
-            (next as any)(error);
+            next(error);
         }
     }
 };

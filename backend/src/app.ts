@@ -31,8 +31,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json() as any);
-app.use(requestLogger as any);
+app.use(express.json());
+app.use(requestLogger);
 
 app.use('/health', healthRoutes);
 app.use('/api/auth', authRouter);
@@ -48,5 +48,5 @@ app.use('/api/media', mediaRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/ai', aiRouter);
 
-app.use(notFound as any);
-app.use(errorHandler as any);
+app.use(notFound);
+app.use(errorHandler);

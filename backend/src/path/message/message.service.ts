@@ -13,6 +13,7 @@ import {
   SeenByDTO,
   MarkChatAsSeenDTO,
 } from '../../types/service.types.js';
+import { MessageStatus } from '@prisma/client';
 
 export class MessageService {
     static async sendMessage(payload: {
@@ -116,7 +117,7 @@ export class MessageService {
         if (message.senderId !== payload.userId) throw new BadRequestError("Unauthorized");
 
         await prisma.message.delete({ where: { id: payload.messageId } });
-        io.to(message.chatId).emit('message:delete', { id: payload.messageId, chatId: message.chatId });
+        io.to(message.chatId).emit('message:delete', { messageId: payload.messageId, userId: payload.userId, chatId: message.chatId });
         return { id: payload.messageId };
     }
 
@@ -141,7 +142,7 @@ export class MessageService {
         return socketPayload ;
     }
 
-    static async changeMessageStatus(payload: { messageId: string, status: any }): Promise<MessageResponse> {
+    static async changeMessageStatus(payload: { messageId: string, status: MessageStatus }): Promise<MessageResponse> {
         const message = await prisma.message.update({
             where: { id: payload.messageId },
             data: { status: payload.status },

@@ -46,19 +46,54 @@ export const authController = {
         }
     },
 
+    requestForgetPassword: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { emailORuId } = req.validated!.params;
+
+            await authService.requestForgetPasswordOTP(emailORuId);
+
+            return successResponse(
+                res,
+                null,
+                "OTP sent successfully for password reset",
+                200
+            );
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    forgetPasswordWithOTP: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { emailORuId } = req.validated!.params;
+            const { otp, password } = req.validated!.body;
+
+            await authService.forgetPassword(emailORuId, otp, password);
+
+            return successResponse(
+                res,
+                null,
+                "Password reset successfully",
+                200
+            );
+        } catch (error) {
+            next(error);
+        }
+    },
+
     refreshToken: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const cookie = req.headers?.cookie! as string;
-            if(!cookie) {
+            if (!cookie) {
                 return errorResponse(res, "Cookie not found", 401);
             }
             const token = cookie
-                            .split("; ")
-                            .find(t => t.startsWith("jid="))
-                            ?.split("=")[1];
+                .split("; ")
+                .find(t => t.startsWith("jid="))
+                ?.split("=")[1];
             if (!token) return errorResponse(res, "No token found", 401);
             const response = await authService.refreshToken(token);
-            if(response.refreshToken) sendRefreshToken(res, response.refreshToken);
+            if (response.refreshToken) sendRefreshToken(res, response.refreshToken);
             return successResponse(res, { accessToken: response.accessToken }, "Token Refreshed Successfully", 200);
         } catch (error) {
             next(error);

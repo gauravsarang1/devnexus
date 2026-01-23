@@ -28,7 +28,7 @@ export class UserService {
 
   static async getUserById(id: string): Promise<UserProfile | null> {
     const user = await prisma.user.findUnique({
-      where: { 
+      where: {
         id,
         isEmailVerified: true
       },
@@ -38,52 +38,76 @@ export class UserService {
       }
     });
 
-    if(!user) throw new NotFoundError("User not found");
+    if (!user) throw new NotFoundError("User not found");
     return this.formatUserWithPhotos(user) as UserProfile;
   }
 
-  static async getUserByUId(uId: string, currentUserId: string): Promise<UserProfileWithStatus> {
+  static async getUserByUId(
+    uId: string,
+    currentUserId: string
+  ): Promise<UserProfileWithStatus> {
+
     const cacheKey = `user:uId:${uId}:viewer:${currentUserId}`;
     const cachedUser = await getCache(cacheKey);
+
     if (cachedUser) {
       return JSON.parse(cachedUser);
     }
+
     const user = await prisma.user.findUnique({
-      where: { 
+      where: {
         uId,
-        isEmailVerified: true
+        isEmailVerified: true,
       },
       include: {
         skills: { include: { skill: true } },
         photo: true,
       },
-    
     });
 
     if (!user) {
       throw new NotFoundError("User not found");
     }
 
-    //find if user already connected or not
-    const match = await prisma.match.findFirst({
-      where: {
-        OR: [
-          { userAId: currentUserId, userBId: user.id, status: { in: ['PENDING', 'ACCEPTED'] } },
-          { userBId: currentUserId, userAId: user.id, status: { in: ['PENDING', 'ACCEPTED'] } },
-        ],
-      },
-    });
+    // ✅ Run independent queries in parallel
+    const [match, reviewed] = await Promise.all([
+      prisma.match.findFirst({
+        where: {
+          OR: [
+            {
+              userAId: currentUserId,
+              userBId: user.id,
+              status: { in: ["PENDING", "ACCEPTED"] },
+            },
+            {
+              userBId: currentUserId,
+              userAId: user.id,
+              status: { in: ["PENDING", "ACCEPTED"] },
+            },
+          ],
+        },
+      }),
 
-    const formattedUser = {
+      prisma.review.findFirst({
+        where: {
+          reviewerId: currentUserId,
+        },
+      }),
+    ]);
+
+    const formattedUser: UserProfileWithStatus = {
       ...this.formatUserWithPhotos(user),
-      status: match?.status || null,
-      isConnected: !!match,
+      status: match?.status ?? null,
+      isConnected: Boolean(match),
+      hasReviewed: user.id !== currentUserId ? Boolean(reviewed) : null,
     };
 
-    // Cache the user data for 3 minutes
+    // Cache for 3 minutes
     await setCache(cacheKey, formattedUser, 180);
-    return formattedUser as UserProfileWithStatus;
+
+    return formattedUser;
   }
+
 
   static async updatePushSubscription(userId: string, subscription: any): Promise<null> {
     await prisma.user.update({
@@ -134,9 +158,9 @@ export class UserService {
       prisma.chat.findMany({
         where: { participants: { some: { userId } } },
         include: {
-          messages: { take: 1, orderBy: { createdAt: 'desc' } },
-          participants: { include: { user: { include: { name: true, photo: { where: { type: 'AVATAR' }, take: 1 } } } } }
-          
+          messages: { take: 1, orderBy: { createdAt: 'desc' }, select: { text: true } },
+          participants: { include: { user: { select: { name: true, id: true, photo: { where: { type: 'AVATAR' }, take: 1 } } } } }
+
         },
         take: 3,
         orderBy: { updatedAt: 'desc' }
@@ -151,7 +175,7 @@ export class UserService {
       participants: c.participants.map((p) => ({
         name: p.user.name,
         id: p.user.id,
-        avatar: p.user.photo.find(ph => ph.type === "AVATAR")?.url || null
+        avatar: p.user.photo[0].url
       }))
     }));
 
@@ -164,8 +188,8 @@ export class UserService {
       unreadNotificationsCount: unreadNotifs
     }
 
-    await setCache(cacheKey, formattedResponse, 300);
-    return formattedResponse;
+    await setCache(cacheKey, formattedResponse, 180);
+    return formattedResponse as any;
   }
 
   static async getSuggestedMatches(userId: string, params: any): Promise<SuggestedMatchesResponse> {

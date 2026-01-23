@@ -32,19 +32,19 @@ setInterval(updateSkillPopularity, 24 * 60 * 60 * 1000); // 24 hours in millisec
  * Graceful shutdown
  */
 // Cast process to any to fix type errors for .on and .exit
-(process as any).on('SIGTERM', () => {
+(process).on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
   httpServer.close(() => {
     console.log('Server closed');
-    (process as any).exit(0);
+    (process).exit(0);
   });
 });
 
 // Cast process to any to fix type errors for .on and .exit
-(process as any).on('SIGINT', () => {
+(process).on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
   httpServer.close(() => {
     console.log('Server closed');
-    (process as any).exit(0);
+    (process).exit(0);
   });
 });

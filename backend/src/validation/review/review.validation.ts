@@ -40,9 +40,9 @@ export const ReviewValidation = {
         })
     }),
 
-    reviewsByReviewedUserId: z.object({
+    getAllUserReviews: z.object({
         params: z.object({
-            reviewedUserId: objectId
+            userId: objectId
         }),
         query: z.object({
             page: z.string().optional(),
@@ -50,13 +50,9 @@ export const ReviewValidation = {
         })
     }),
 
-    reviewsByReviewerId: z.object({
+    getStats: z.object({
         params: z.object({
-            reviewerId: objectId
-        }),
-        query: z.object({
-            page: z.string().optional(),
-            limit: z.string().optional()
+            userId: objectId
         })
     })
 };

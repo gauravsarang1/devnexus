@@ -10,6 +10,7 @@ import {
     CreateReviewDTO,
     ReviewResponse,
     UserReviewsResponse,
+    Review
 } from '../../types/service.types.js'
 
 interface ReviewSearchParams extends SearchParams {
@@ -18,10 +19,10 @@ interface ReviewSearchParams extends SearchParams {
 }
 
 export class ReviewService {
-    static async createReview(data: CreateReviewDTO): Promise<ReviewResponse> {
+    static async createReview(reviewerId: string, data: CreateReviewDTO): Promise<ReviewResponse> {
         const review = await prisma.review.create({
             data: {
-                reviewerId: data.reviewerId,
+                reviewerId: reviewerId,
                 reviewedUserId: data.reviewedUserId,
                 rating: data.rating,
                 comment: data.comment
@@ -50,7 +51,7 @@ export class ReviewService {
         return review;
     };
 
-    static async getReviews(params: ReviewSearchParams): Promise<{reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean }}> {
+    static async getReviews(params: ReviewSearchParams): Promise<{ reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean } }> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
@@ -73,7 +74,18 @@ export class ReviewService {
                 },
                 skip,
                 take: limit,
-                include: { reviewer: { select: { name: true, avatar: true } } }
+                include: {
+                    reviewer: {
+                        select: {
+                            name: true,
+                            photo: {
+                                where: {
+                                    type: 'AVATAR'
+                                }
+                            }
+                        }
+                    }
+                }
             }),
             prisma.review.count({
                 where: {
@@ -82,8 +94,13 @@ export class ReviewService {
             })
         ]);
 
+        const formattedReviews = reviews.map(r => ({
+            ...r,
+            avatar: r.reviewer.photo[0].url || null
+        }))
+
         return {
-            reviews,
+            reviews: formattedReviews,
             pagination: {
                 total,
                 page,
@@ -94,7 +111,7 @@ export class ReviewService {
         };
     };
 
-    static async editReview(reviewId: string, reviewerId: string, data: EditReviewDTO): Promise<Review> {
+    static async editReview(reviewId: string, reviewerId: string, data: any): Promise<Review> {
         const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
         if (!existingReview) throw new NotFoundError("Review not found");
         if (existingReview.reviewerId !== reviewerId) throw new BadRequestError("Unauthorized: you can not update this review");
@@ -127,32 +144,58 @@ export class ReviewService {
     static async getReviewById(reviewId: string): Promise<Review | null> {
         const review = await prisma.review.findUnique({
             where: {
-                id:reviewId
+                id: reviewId
             }
         });
 
         return review;
     };
 
-    static async getReviewsByReviewerId(reviewerId: string, params: SearchParams): Promise<{reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean }}> {
+    static async getAllUserReviews(userId: string, currentUserId: string, params: SearchParams): Promise<{ reviews: ReviewResponse[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean } }> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
 
         const [reviews, total] = await Promise.all([
             prisma.review.findMany({
-                where: { reviewerId },
+                where: { reviewedUserId: userId },
                 skip,
                 take: limit,
-                include: { reviewedUser: { select: { name: true, avatar: true } } }
+                include: {
+                    reviewer: {
+                        select: {
+                            name: true,
+                            photo: {
+                                where: {
+                                    type: "AVATAR"
+                                }
+                            },
+                            uId: true
+                        }
+                    }
+                }
             }),
             prisma.review.count({
-                where: { reviewerId }
-            })
+                where: { reviewedUserId: userId }
+            }),
         ]);
 
+        const formattedReviews: ReviewResponse[] = reviews.map(r => {
+            const { reviewer, ...rest } = r;
+
+            return {
+                ...rest,
+                reviewer: {
+                    uId: reviewer.uId,
+                    name: reviewer.name,
+                    avatar: reviewer.photo?.[0]?.url ?? null,
+                },
+            };
+        });
+
+
         return {
-            reviews,
+            reviews: formattedReviews,
             pagination: {
                 total,
                 page,
@@ -163,7 +206,30 @@ export class ReviewService {
         };
     };
 
-    static async getReviewsByReviewedUserId(reviewedUserId: string, params: SearchParams): Promise<{reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean }}> {
+    static async getStats(userId: string, currentUserId: string): Promise<any> {
+        const reviews = await prisma.review.findMany({
+            where: {
+                reviewedUserId: userId,
+            },
+            select: {
+                rating: true,
+            },
+        });
+
+        const totalReviews = reviews.length;
+
+        const avgRating =
+            totalReviews === 0
+                ? 0
+                : reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
+
+        return {
+            totalReviews,
+            avgRating,
+        };
+    };
+
+    static async getReviewsByReviewedUserId(reviewedUserId: string, params: SearchParams): Promise<{ reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean } }> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
