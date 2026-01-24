@@ -85,6 +85,15 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
     }
   };
 
+  function formatDate(date: string) {
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+
   const buttonConfig =
     user.status === "ACCEPTED"
       ? {
@@ -293,7 +302,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = (props) => {
           {!isEditing && (
             <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-slate-500 mt-2">
               <span className="flex items-center gap-1.5 font-medium">
-                <Calendar size={16} /> Joined 2024
+                <Calendar size={16} /> {formatDate(user.createdAt)}
               </span>
               <span className="flex items-center gap-1.5 font-medium">
                 <Mail size={16} /> {user.email}

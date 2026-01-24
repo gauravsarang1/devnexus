@@ -33,7 +33,7 @@ export const skillService = {
   }): Promise<null> =>
     unwrap(
       await apiClient.post<SimpleSkillActionResponse>(
-        '/skill-on-user',
+        '/skillOnUser',
         skillData
       )
     ),
@@ -44,7 +44,7 @@ export const skillService = {
   ): Promise<null> =>
     unwrap(
       await apiClient.put<SimpleSkillActionResponse>(
-        `/skill-on-user/${skillOnUserId}`,
+        `/skillOnUser/${skillOnUserId}`,
         { level }
       )
     ),
@@ -52,6 +52,6 @@ export const skillService = {
   removeUserSkill: async (skillOnUserId: string): Promise<null> =>
     unwrap(
       await apiClient.delete<SimpleSkillActionResponse>(
-        `/skill-on-user/${skillOnUserId}`)
+        `/skillOnUser/${skillOnUserId}`)
     ),
 };

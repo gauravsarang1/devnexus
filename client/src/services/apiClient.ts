@@ -32,12 +32,11 @@ apiClient.interceptors.request.use(
 // Response Interceptor: Handle auth errors
 apiClient.interceptors.response.use(
   (response) => {
-    const { success, error } = response.data || {};
-
+    const { success, message } = response.data || {};
     // Backend-level failure (200 but success=false)
     if (success === false) {
-      toast.error(error?.message || 'Something went wrong');
-      return Promise.reject(error);
+      toast.error(message || 'Something went wrong');
+      return Promise.reject(message);
     }
 
     return response;
@@ -45,8 +44,7 @@ apiClient.interceptors.response.use(
   (error: AxiosError<any>) => {
     // Network / server / auth errors
     const message =
-      error.response?.data?.error?.message ||
-      error.message ||
+      error.response?.data?.message ||
       'Network error';
 
     toast.error(message);
