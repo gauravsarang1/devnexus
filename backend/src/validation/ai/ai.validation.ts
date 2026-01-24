@@ -4,7 +4,7 @@ import z from 'zod';
 export const AiValidation = {
     suggestSearch: z.object({
         body: z.object({
-            query: z.string().min(3),
+            query: z.string(),
         })
     }),
 
