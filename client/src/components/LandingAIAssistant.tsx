@@ -29,9 +29,10 @@ const LandingAIAssistant: React.FC = () => {
 
     try {
       const res = await aiService.askAssistant(userMsg);
-      if (res.success) {
-        setMessages(prev => [...prev, { role: 'ai', content: res.data.answer }]);
-      }
+      console.log(res)
+    
+        setMessages(prev => [...prev, { role: 'ai', content: res}]);
+    
     } catch (err) {
       toast.error("I'm momentarily disconnected. Try again?");
     } finally {

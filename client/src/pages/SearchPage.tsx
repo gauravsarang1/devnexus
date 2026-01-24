@@ -202,6 +202,13 @@ const SearchPage: React.FC<{ navigate: (to: string) => void }> = ({
                   {isAiLoading && (
                     <Loader2 size={12} className="animate-spin text-blue-600" />
                   )}
+
+                  <button
+                    onClick={() => setShowAiDropdown(false)}
+                    className="p-1 rounded-full hover:bg-slate-100"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
 
                 {aiSuggestions.map((s, i) => (
