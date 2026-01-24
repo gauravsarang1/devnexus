@@ -29,7 +29,7 @@ export const AiValidation = {
 
     askAssistant: z.object({
         body: z.object({
-            question: z.string().min(5),
+            question: z.string().min(2),
         })
     }),
 

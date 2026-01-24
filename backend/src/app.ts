@@ -20,6 +20,7 @@ import matchRouter from './path/match/match.route.js';
 import mediaRouter from './path/media/media.route.js';
 import notificationRouter from './path/notification/notification.route.js';
 import aiRouter from './path/ai/ai.route.js';
+import skillOnUserRouter from './path/skill-on-user/skill-on-user.route.js';
 
 export const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/matches', matchRouter);
 app.use('/api/media', mediaRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/skillOnUser', skillOnUserRouter)
 
 app.use(notFound);
 app.use(errorHandler);
