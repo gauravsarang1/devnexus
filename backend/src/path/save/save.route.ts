@@ -1,18 +1,14 @@
-import { saveController } from "./save.controller.js";
 import { Router } from "express";
-import { requireAuth } from '../../middleware/auth.middleware.js';
-import { SaveValidation } from "../../validation/save/save.validationn.js";
+import { saveController } from "./save.controller.js";
+import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
+import { SaveValidation } from "../../validation/save/save.validation.js";
 
-const router = Router();
+export const saveRouter = Router();
 
-router.get('/', saveController.getAll);
-
-router.post('/match/:matchId', requireAuth, validate(SaveValidation.toggleSaveMatch), saveController.toggleSaveMatch);
-router.get('/match', requireAuth, validate(SaveValidation.getSavedMatch), saveController.getSavedMatches);
-
-router.post('/user/:userId', requireAuth, validate(SaveValidation.toggleUserSave), saveController.toggleSaveUser);
-router.get('/user', requireAuth, validate(SaveValidation.getSavedUsers), saveController.getSavedUsers);
-
-export default router;
-
+saveRouter.post(
+    "/toggle",
+    requireAuth,
+    validate(SaveValidation.toggleSave),
+    saveController.toggleSave
+);
