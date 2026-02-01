@@ -18,7 +18,7 @@ const AICoach: React.FC<{ user: User }> = ({ user }) => {
     {
       role: "assistant",
       content:
-        "Hi! I'm your SkillSwap Mentor. How can I help you optimize your learning journey today?",
+        "Hi! I'm your DevNexus Mentor. How can I help you optimize your learning journey today?",
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);

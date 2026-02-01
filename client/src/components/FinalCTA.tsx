@@ -40,7 +40,7 @@ const FinalCTA: React.FC<FinalCTAProps> = ({ navigate }) => {
               whileTap={{ scale: 0.95 }}
               className="w-full sm:w-auto px-12 py-5 bg-white text-blue-600 rounded-full text-xl font-bold shadow-2xl"
             >
-              Join SkillSwap
+              Join DevNexus
             </motion.button>
             <p className="text-blue-100/60 text-sm font-medium">Free forever. No credit card required.</p>
           </div>

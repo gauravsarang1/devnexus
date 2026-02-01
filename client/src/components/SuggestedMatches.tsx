@@ -78,7 +78,7 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                     <CheckCircle2 size={14} className="text-blue-500" />
                   </h4>
                   <p className="text-xs text-slate-500 truncate max-w-[150px]">
-                    {user.bio || "SkillSwap Member"}
+                    {user.bio || "DevNexus Member"}
                   </p>
                 </div>
               </div>

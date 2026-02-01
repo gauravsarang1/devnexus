@@ -53,7 +53,7 @@ const UserCard: React.FC<UserCardProps> = ({
             )}
           </h4>
           <p className="text-xs sm:text-sm text-slate-500 truncate mt-0.5">
-            {user.bio || "SkillSwap Member"}
+            {user.bio || "DevNexus Member"}
           </p>
         </div>
 

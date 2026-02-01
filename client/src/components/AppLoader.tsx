@@ -49,7 +49,7 @@ const AppLoader = () => {
                 {/* TEXT STACK */}
                 <div className="hidden sm:flex flex-col items-center text-center">
                     <h1 className="text-[#0F172A] text-3xl font-black tracking-tighter mb-1 animate-text-reveal">
-                        SkillSwap
+                        DevNexus
                     </h1>
                     <div className="h-[1px] w-8 bg-[#CBD5E1] mb-3 animate-line-grow"></div>
                     <p className="text-[#64748B] text-xs font-semibold uppercase tracking-[0.2em] animate-fade-in-up">

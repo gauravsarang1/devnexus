@@ -53,7 +53,7 @@ const SkillDiscovery: React.FC<SkillDiscoveryProps> = ({
               Explore Skills
             </h2>
             <p className="text-sm text-slate-500">
-              What the SkillSwap community is learning right now
+              What the DevNexus community is learning right now
             </p>
           </div>
         </div>

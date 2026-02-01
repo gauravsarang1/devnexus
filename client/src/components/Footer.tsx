@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-white rounded-sm rotate-45"></div>
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">SkillSwap</span>
+              <span className="text-xl font-bold tracking-tight text-slate-900">DevNexus</span>
             </div>
             <p className="text-slate-500 mb-8 max-w-xs">
               Empowering the next generation of Indian creators and engineers through peer-to-peer skill exchange.
@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-400 text-sm">© 2024 SkillSwap India. All rights reserved.</p>
+          <p className="text-slate-400 text-sm">© 2024 DevNexus India. All rights reserved.</p>
           <div className="flex gap-8 text-sm text-slate-400">
             <a href="#" className="hover:text-slate-900">Support</a>
             <a href="#" className="hover:text-slate-900">FAQ</a>

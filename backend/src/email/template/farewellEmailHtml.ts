@@ -7,10 +7,10 @@ export default function farewellEmailHtml(name: string) {
         </div>
         <div style="padding: 30px;">
             <p>Hi ${name},</p>
-            <p>We're confirming that your SkillSwap account has been successfully deleted and all your personal data has been removed from our active systems.</p>
+            <p>We're confirming that your DevNexus account has been successfully deleted and all your personal data has been removed from our active systems.</p>
             <p>We're sorry to see you go! If you ever decide to come back and continue your learning journey, our community will be here waiting for you.</p>
             <p>If this deletion was an error, please contact our support team immediately.</p>
-            <p>Best of luck with your future builds,<br/>The SkillSwap Team</p>
+            <p>Best of luck with your future builds,<br/>The DevNexus Team</p>
         </div>
     </div>
     `;

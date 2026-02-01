@@ -19,7 +19,7 @@ const Audience: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4">Is this for you?</h2>
-          <p className="text-slate-600 text-lg">SkillSwap is built for everyone who believes in the power of peer-learning.</p>
+          <p className="text-slate-600 text-lg">DevNexus is built for everyone who believes in the power of peer-learning.</p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-6">

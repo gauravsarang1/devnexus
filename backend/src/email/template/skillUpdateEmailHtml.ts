@@ -10,14 +10,14 @@ export default function skillUpdateEmailHtml(name: string, skillName: string, ro
         </div>
         <div style="padding: 30px;">
             <p>Hi ${name},</p>
-            <p>Your SkillSwap profile has been updated with a new ${roleText.toLowerCase()}.</p>
+            <p>Your DevNexus profile has been updated with a new ${roleText.toLowerCase()}.</p>
             <div style="background-color: #f9fafb; padding: 20px; border-radius: 10px; margin: 20px 0;">
                 <p style="margin: 0; font-weight: bold; color: ${color};">${roleText}</p>
                 <p style="margin: 5px 0; font-size: 18px;"><strong>${skillName}</strong></p>
                 <p style="margin: 0; font-size: 14px; color: #666;">Level: ${level}</p>
             </div>
             <p>Keeping your profile up to date helps us find better matches for you!</p>
-            <p>Best regards,<br/>The SkillSwap Team</p>
+            <p>Best regards,<br/>The DevNexus Team</p>
         </div>
     </div>
     `;

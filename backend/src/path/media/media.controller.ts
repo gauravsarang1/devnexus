@@ -15,7 +15,7 @@ export const mediaController = {
   getUploadSignature: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const timestamp = Math.round(new Date().getTime() / 1000);
-      const folder = 'skillswap/profiles';
+      const folder = 'DevNexus/profiles';
       
       // Generate signature
       const signature = cloudinary.utils.api_sign_request(

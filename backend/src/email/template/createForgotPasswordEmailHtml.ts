@@ -4,12 +4,12 @@ export default function createForgotPasswordEmailHtml(
 ) {
     return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #E53935;">Skillswap Password Reset</h2>
+      <h2 style="color: #E53935;">DevNexus Password Reset</h2>
 
       <p>Hi ${name},</p>
 
       <p>
-        We received a request to reset your Skillswap account password.
+        We received a request to reset your DevNexus account password.
         Use the One-Time Password (OTP) below to proceed with resetting your password:
       </p>
 
@@ -36,7 +36,7 @@ export default function createForgotPasswordEmailHtml(
 
       <p>
         Best regards,<br/>
-        <strong>The Skillswap Team</strong>
+        <strong>The DevNexus Team</strong>
       </p>
     </div>
   `;

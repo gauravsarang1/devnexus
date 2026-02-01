@@ -38,7 +38,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
       const { accessToken } = await authService.login(emailORuId, password);
 
       dispatch(setToken(accessToken));
-      toast.success('Welcome back to SkillSwap');
+      toast.success('Welcome back to DevNexus');
       navigate('/home');
     } finally {
       setIsLoading(false);
@@ -73,7 +73,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
             <div className="w-6 h-6 border-2 border-white rounded-sm rotate-45" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome Back</h1>
-          <p className="text-slate-500 mt-2 text-center">Login to your SkillSwap account and continue building.</p>
+          <p className="text-slate-500 mt-2 text-center">Login to your DevNexus account and continue building.</p>
         </div>
 
         {/* Google Login Button*/}
@@ -100,7 +100,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
                 type="text"
                 value={emailORuId}
                 onChange={(e) => setemailORuId(e.target.value)}
-                placeholder="aryan@skillswap.com"
+                placeholder="aryan@DevNexus.com"
                 className="w-full bg-slate-50 border-none rounded-2xl py-4 pl-12 pr-4 text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
               />
             </div>

@@ -11,7 +11,7 @@ export class AuthNotifier {
         otp: string
     }) {
         const { email, name, otp } = data;
-        sendMail(email, "Skillswap Account Verification", createVerificationEmailHtml(name, otp))
+        sendMail(email, "DevNexus Account Verification", createVerificationEmailHtml(name, otp))
         .catch(console.error);
     };
 
@@ -20,7 +20,7 @@ export class AuthNotifier {
         email: string
     }) {
         const { name, email } = data;
-        sendMail(email, "Skillswap Account Verified Successfully", accountSuccessEmailHtml(name))
+        sendMail(email, "DevNexus Account Verified Successfully", accountSuccessEmailHtml(name))
         .catch(console.error);
     }
 
@@ -30,7 +30,7 @@ export class AuthNotifier {
         otp: string
     }) {
         const { name, email, otp} = data;
-        sendMail(email, "Skillswap Forget Password Verification", createForgotPasswordEmailHtml(name, otp))
+        sendMail(email, "DevNexus Forget Password Verification", createForgotPasswordEmailHtml(name, otp))
         .catch(console.error);
     }
 
@@ -39,7 +39,7 @@ export class AuthNotifier {
         email: string
     }) {
         const { name, email } = data;
-        sendMail(email, "Skillswap Forget Account Password Successfully", passwordResetSuccessEmailHtml(name))
+        sendMail(email, "DevNexus Forget Account Password Successfully", passwordResetSuccessEmailHtml(name))
         .catch(console.error);
     }
 }

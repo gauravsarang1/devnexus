@@ -9,4 +9,4 @@ Disallow: /chat
 Disallow: /matches
 Disallow: /verify-otp
 
-Sitemap: https://skillswap.ai/sitemap.xml
+Sitemap: https://DevNexus.ai/sitemap.xml

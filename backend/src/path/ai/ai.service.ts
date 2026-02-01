@@ -70,7 +70,7 @@ export class AIService {
       const kbData = await fs.readFile(kbPath, 'utf-8');
       
       const model = 'gemini-3-flash-preview';
-      const prompt = `Context about SkillSwap: ${kbData}
+      const prompt = `Context about DevNexus: ${kbData}
       
       User Question: ${question}
       
@@ -80,7 +80,7 @@ export class AIService {
       const response = await ai.models.generateContent({ model, contents: prompt });
       return response.text?.trim() || "I'm here to help you swap skills and build great things!";
     } catch (e) {
-      return "I'm SkillSwap's AI guide. How can I help you navigate our community?";
+      return "I'm DevNexus's AI guide. How can I help you navigate our community?";
     }
   }
 
@@ -99,7 +99,7 @@ export class AIService {
 
     const model = 'gemini-3-flash-preview';
     const prompt = `
-      You are the SkillSwap AI Mentor for an Indian Gen-Z peer-to-peer learning platform.
+      You are the DevNexus AI Mentor for an Indian Gen-Z peer-to-peer learning platform.
       User Profile: Name: ${user?.name || 'New Learner'}, Current Skills: [${skillsText}].
       
       Conversation History:

@@ -7,6 +7,6 @@ export class UserNotifier {
         name: string
     }) {
         const { name, email } = data!;
-        sendMail(email, "Your SkillSwap Account has been Closed", farewellEmailHtml(name));
+        sendMail(email, "Your DevNexus Account has been Closed", farewellEmailHtml(name));
     }
 }

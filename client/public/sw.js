@@ -1,4 +1,4 @@
-// SkillSwap Service Worker
+// DevNexus Service Worker
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -16,7 +16,7 @@ self.addEventListener("push", (event) => {
     data = event.data.json();
   } catch {
     data = {
-      title: "SkillSwap Alert",
+      title: "DevNexus Alert",
       message: event.data.text(),
     };
   }
@@ -25,7 +25,7 @@ self.addEventListener("push", (event) => {
     body: data.message,
     icon: "./favicon-96x96.png",
     badge: "./favicon-96x96.png",
-    tag: "skillswap-notification",
+    tag: "DevNexus-notification",
     renotify: true,
     data: {
       link: data.link || "/home",
@@ -38,7 +38,7 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "SkillSwap", options)
+    self.registration.showNotification(data.title || "DevNexus", options)
   );
 });
 

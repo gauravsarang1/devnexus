@@ -132,7 +132,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
             </div>
 
             <span className="text-xl font-bold tracking-tight text-slate-900 hidden sm:block">
-              SkillSwap
+              DevNexus
             </span>
           </div>
 

@@ -6,7 +6,7 @@ export const sendMail = async (
   html: string
 ) => {
   await mailTransporter.sendMail({
-    from: `"SkillSwap" <${process.env.MAIL_USER!}>`,
+    from: `"DevNexus" <${process.env.MAIL_USER!}>`,
     to,
     subject,
     html,

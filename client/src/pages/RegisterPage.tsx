@@ -260,7 +260,7 @@ const RegisterPage: React.FC<{ navigate: (path: string) => void }> = ({
                   Create Account
                 </h1>
                 <p className="text-slate-500 mt-2 text-sm sm:text-base font-medium text-center">
-                  Join SkillSwap and start sharing your expertise
+                  Join DevNexus and start sharing your expertise
                 </p>
               </div>
 

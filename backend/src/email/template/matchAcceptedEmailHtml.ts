@@ -12,7 +12,7 @@ export default function matchAcceptedEmailHtml(userName: string, partnerName: st
             <div style="text-align: center; margin: 30px 0;">
                 <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/chat" style="background-color: #2563eb; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start Chatting</a>
             </div>
-            <p>Happy swapping!<br/>The SkillSwap Team</p>
+            <p>Happy swapping!<br/>The DevNexus Team</p>
         </div>
     </div>
     `;

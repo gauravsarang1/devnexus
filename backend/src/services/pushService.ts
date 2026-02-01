@@ -9,7 +9,7 @@ const privateVapidKey = process.env.PRIVATE_VAPID_KEY || '';
 
 if (publicVapidKey && privateVapidKey) {
   webpush.setVapidDetails(
-    'mailto:support@skillswap.com',
+    'mailto:support@DevNexus.com',
     publicVapidKey,
     privateVapidKey
   );

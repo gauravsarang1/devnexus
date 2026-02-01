@@ -20,7 +20,7 @@ const LandingNavbar: React.FC<LandingNavbarProps> = ({ navigate }) => {
       </div>
 
       <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
-        SkillSwap
+        DevNexus
       </span>
     </div>
 

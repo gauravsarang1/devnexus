@@ -12,7 +12,7 @@ interface SEOProps {
 const SEO: React.FC<SEOProps> = ({ title, description, canonical }) => {
   useEffect(() => {
     // Update Title
-    const fullTitle = `${title} | SkillSwap`;
+    const fullTitle = `${title} | DevNexus`;
     document.title = fullTitle;
 
     // Update Meta Description

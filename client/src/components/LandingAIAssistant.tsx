@@ -9,7 +9,7 @@ const LandingAIAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{ role: 'ai' | 'user'; content: string }[]>([
-    { role: 'ai', content: "Hey there! I'm SkillSwap's welcome bot. Ask me anything about how this platform works!" }
+    { role: 'ai', content: "Hey there! I'm DevNexus's welcome bot. Ask me anything about how this platform works!" }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,7 +77,7 @@ const LandingAIAssistant: React.FC = () => {
                   <Bot size={18} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold">SkillSwap AI</h4>
+                  <h4 className="text-sm font-bold">DevNexus AI</h4>
                   <p className="text-[10px] text-blue-400 font-black uppercase tracking-widest">Guide</p>
                 </div>
               </div>
@@ -116,7 +116,7 @@ const LandingAIAssistant: React.FC = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask about SkillSwap..." 
+                  placeholder="Ask about DevNexus..." 
                   className="w-full bg-slate-100 rounded-2xl py-3 pl-4 pr-12 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all font-medium" 
                 />
                 <button 

@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "SkillSwap Backend - Node, Express, Prisma, Socket.io",
+  "description": "DevNexus Backend - Node, Express, Prisma, Socket.io",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
