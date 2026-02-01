@@ -78,6 +78,8 @@ model User {
   notifications             Notification[]
   reviewsGiven              Review[]         @relation("ReviewsGiven")
   reviewsReceived           Review[]         @relation("ReviewsReceived")
+  save                      Save[]           @relation("UserSaves")
+  savedBy                   Save[]           @relation("SavedUser")
   photo                     Photo[]
 
   createdAt                 DateTime         @default(now())
@@ -126,6 +128,7 @@ model Match {
   userA     User         @relation("UserAsA", fields: [userAId], references: [id], onDelete: Cascade)
   userB     User         @relation("UserAsB", fields: [userBId], references: [id], onDelete: Cascade)
   skills    MatchSkill[]
+  savedBy   Save[]       @relation("SavedMatch")
 
   @@unique([userAId, userBId])
   @@index([userAId])
@@ -225,4 +228,24 @@ model Photo {
   @@unique([userId, type])
   @@index([type])
   @@index([userId])
+}
+
+model Save {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  saverId   String   @db.ObjectId
+  type      SaveType
+  userId    String?  @db.ObjectId
+  matchId   String?  @db.ObjectId
+  
+  saver     User     @relation("UserSaves", fields: [saverId], references: [id], onDelete: Cascade)
+  user      User?    @relation("SavedUser", fields: [userId], references: [id], onDelete: Cascade)
+  match     Match?   @relation("SavedMatch", fields: [matchId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([saverId, userId], map: "unique_user_save")
+  @@unique([saverId, matchId], map: "unique_match_save")
+  @@index([saverId])
+  @@index([userId])
+  @@index([matchId])
 }
