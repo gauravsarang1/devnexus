@@ -21,9 +21,9 @@ export class ReviewNotifier {
         if (review.targetType === 'POST') {
             const post = await prisma.post.findUnique({
                 where: { id: review.postId! },
-                select: { userId: true },
+                select: { authorId: true },
             });
-            return post?.userId ?? null;
+            return post?.authorId ?? null;
         }
 
         if (review.targetType === 'PROJECT') {

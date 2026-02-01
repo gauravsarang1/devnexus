@@ -47,6 +47,7 @@ enum NotificationType {
   SYSTEM
   SKILL_UPDATE
   REVIEW
+  MENTION
 }
 
 enum mention_type {
@@ -260,6 +261,7 @@ model Photo {
   post      Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   projectLogo Project?
+  createdAt DateTime    @default(now())
 
   @@unique([userId, type])
   @@index([type])
@@ -269,7 +271,7 @@ model Photo {
 
 model Project {
   id           String  @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
+  title         String
   slug         String  @unique
   tagline      String?
   description  String
@@ -317,8 +319,8 @@ model MentionOnPost {
 
 model Post {
   id     String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId String  @db.ObjectId
-  text   String?
+  authorId String  @db.ObjectId
+  content   String?
 
   photos  Photo[]
   reviews Review[]
@@ -326,12 +328,12 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mentionOnPosts MentionOnPost[]
+  author           User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  mentionsOnPost MentionOnPost[]
   saves          Save[]
   likes          Like[]
 
-  @@index([userId])
+  @@index([authorId])
 }
 
 model Like {
