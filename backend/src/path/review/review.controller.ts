@@ -56,11 +56,15 @@ export const reviewController = {
     },
 
     getStats: async (req: Request, res: Response, next: NextFunction) => {
-        const {userId} = req.validated?.params;
-        const currentUserId = req.userId!;
-
-        const result = await ReviewService.getStats(userId, currentUserId);
-        return successResponse(res, result, "Stats retrieved successfully"); 
+        try {
+            const {userId} = req.validated?.params;
+            const currentUserId = req.userId!;
+    
+            const result = await ReviewService.getStats(userId, currentUserId);
+            return successResponse(res, result, "Stats retrieved successfully"); 
+        } catch (error) {
+            next(error)
+        }
     },
 
     editReview: async (req: Request, res: Response, next: NextFunction) => {
