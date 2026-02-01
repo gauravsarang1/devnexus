@@ -3,6 +3,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import http from 'http';
 import { app } from '../app.js';
 import prisma from '../config/prisma.js';
+import { NotificationType } from '@prisma/client';
 
 export const httpServer = http.createServer(app);
 
@@ -22,7 +23,7 @@ export interface SocketMessagePayload {
 }
 
 export interface SocketNotificationPayload {
-  type: 'CHAT' | 'MATCH_REQUEST' | 'MATCH_ACCEPTED' | 'SYSTEM' | 'SKILL_UPDATE' | 'REVIEW';
+  type: NotificationType
   title: string;
   message: string;
   link: string;

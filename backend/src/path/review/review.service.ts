@@ -4,14 +4,13 @@ import prisma from '../../config/prisma.js'
 import { BadRequestError } from '../../errors/BadRequestError.js'
 import { NotFoundError } from '../../errors/NotFoundError.js'
 import { SearchParams } from '../../types/search-params.js'
-import { NotificationService } from '../notification/notification.service.js'
-import io from '../../sockets/socketHandlers.js'
 import {
     CreateReviewDTO,
-    ReviewResponse,
-    UserReviewsResponse,
-    Review
-} from '../../types/service.types.js'
+    ReviewResponse
+} from './review.type.js'
+import { ReviewTargetType, Review } from '@prisma/client'
+import { ReviewNotifier } from './review.notification.js'
+import { ReviewHelper } from './review.helper.js'
 
 interface ReviewSearchParams extends SearchParams {
     reviewerId?: string;
@@ -19,36 +18,35 @@ interface ReviewSearchParams extends SearchParams {
 }
 
 export class ReviewService {
-    static async createReview(reviewerId: string, data: CreateReviewDTO): Promise<ReviewResponse> {
+    
+    static async createReview(data: CreateReviewDTO): Promise<ReviewResponse> {
+        const reviewData = ReviewHelper.createReviewData(data);
+
         const review = await prisma.review.create({
-            data: {
-                reviewerId: reviewerId,
-                reviewedUserId: data.reviewedUserId,
-                rating: data.rating,
-                comment: data.comment
-            },
-            include: { reviewer: { select: { name: true } } }
+            data: reviewData,
+            include: {
+                reviewer: {
+                    select: {
+                        id: true,
+                        name: true,
+                        uId: true,
+                        photo: {
+                            where: {
+                                type: "AVATAR"
+                            }
+                        }
+                    }
+                }
+            }
         });
 
-        // Persistent Notification
-        await NotificationService.createNotification({
-            userId: data.reviewedUserId,
-            type: 'REVIEW' as any,
-            title: 'New Skill Endorsement!',
-            message: `${review.reviewer.name} left you a ${data.rating}-star review.`,
-            link: `/profile`,
-            payload: { reviewId: review.id }
-        });
+        const formattedReview = {
+            ...review,
+            reviewer: ReviewHelper.formatReviewer(review.reviewer)
+        };
+        ReviewNotifier.createReview(formattedReview);
 
-        // Real-time Emit
-        io.to(`user:${data.reviewedUserId}`).emit('notification', {
-            type: 'REVIEW' as any,
-            title: 'New Skill Endorsement!',
-            message: `${review.reviewer.name} left you a ${data.rating}-star review.`,
-            link: `/profile`
-        });
-
-        return review;
+        return formattedReview;
     };
 
     static async getReviews(params: ReviewSearchParams): Promise<{ reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean } }> {
@@ -130,7 +128,7 @@ export class ReviewService {
     static async deleteReview(reviewId: string, currentUser: string): Promise<null> {
         const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
         if (!existingReview) throw new NotFoundError("Review not found");
-        if (existingReview.reviewerId !== currentUser && existingReview.reviewedUserId !== currentUser) throw new BadRequestError("Unauthorized: you can not update this review");
+        if (existingReview.reviewerId !== currentUser && existingReview.userId !== currentUser) throw new BadRequestError("Unauthorized: you can not update this review");
 
         const review = await prisma.review.delete({
             where: {
@@ -151,48 +149,52 @@ export class ReviewService {
         return review;
     };
 
-    static async getAllUserReviews(userId: string, currentUserId: string, params: SearchParams): Promise<{ reviews: ReviewResponse[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean } }> {
+    static async getAllReviews(
+        targetId: string,
+        targetType: ReviewTargetType,
+        currentUserId: string,
+        params: SearchParams
+    ): Promise<{
+        reviews: ReviewResponse[];
+        pagination: {
+            total: number;
+            page: number;
+            limit: number;
+            pages: number;
+            hasNextPage: boolean;
+        };
+    }> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
 
+        const where = ReviewHelper.buildReviewWhereClause(targetType, targetId);
+
         const [reviews, total] = await Promise.all([
             prisma.review.findMany({
-                where: { reviewedUserId: userId },
+                where,
                 skip,
                 take: limit,
+                orderBy: { createdAt: 'desc' },
                 include: {
                     reviewer: {
                         select: {
                             name: true,
+                            uId: true,
                             photo: {
-                                where: {
-                                    type: "AVATAR"
-                                }
+                                where: { type: 'AVATAR' },
                             },
-                            uId: true
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             }),
-            prisma.review.count({
-                where: { reviewedUserId: userId }
-            }),
+            prisma.review.count({ where }),
         ]);
 
-        const formattedReviews: ReviewResponse[] = reviews.map(r => {
-            const { reviewer, ...rest } = r;
-
-            return {
-                ...rest,
-                reviewer: {
-                    uId: reviewer.uId,
-                    name: reviewer.name,
-                    avatar: reviewer.photo?.[0]?.url ?? null,
-                },
-            };
-        });
-
+        const formattedReviews: ReviewResponse[] = reviews.map(r => ({
+            ...r,
+            reviewer: ReviewHelper.formatReviewer(r.reviewer),
+        }));
 
         return {
             reviews: formattedReviews,
@@ -202,14 +204,14 @@ export class ReviewService {
                 limit,
                 pages: Math.ceil(total / limit),
                 hasNextPage: page * limit < total,
-            }
+            },
         };
-    };
+    }
 
     static async getStats(userId: string, currentUserId: string): Promise<any> {
         const reviews = await prisma.review.findMany({
             where: {
-                reviewedUserId: userId,
+                userId,
             },
             select: {
                 rating: true,
@@ -236,13 +238,13 @@ export class ReviewService {
 
         const [reviews, total] = await Promise.all([
             prisma.review.findMany({
-                where: { reviewedUserId },
+                where: { userId: reviewedUserId },
                 skip,
                 take: limit,
                 include: { reviewer: { select: { name: true, avatar: true } } }
             }),
             prisma.review.count({
-                where: { reviewedUserId }
+                where: { userId: reviewedUserId }
             })
         ]);
 

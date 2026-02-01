@@ -12,7 +12,7 @@ reviewRouter.get('/:reviewId', requireAuth, validate(ReviewValidation.reviewById
 reviewRouter.put('/:reviewId', requireAuth, validate(ReviewValidation.editReview), reviewController.editReview);
 reviewRouter.delete('/:reviewId', requireAuth, validate(ReviewValidation.deleteReview), reviewController.deleteReview);
 
-reviewRouter.get('/user/:userId', requireAuth, validate(ReviewValidation.getAllUserReviews), reviewController.getAllUserReviews);
+reviewRouter.get('/:targetId/:targeType', requireAuth, validate(ReviewValidation.getAllReviews), reviewController.getReviews);
 reviewRouter.get('/user/:userId/stats' ,requireAuth, validate(ReviewValidation.getStats), reviewController.getStats);
 
 export default reviewRouter

@@ -411,47 +411,6 @@ export interface UploadPhotoDTO {
 }
 
 // ============================================
-// REVIEW SERVICE TYPES
-// ============================================
-
-export interface Review {
-  id: string;
-  reviewerId: string;
-  reviewedUserId: string;
-  rating: number;
-  comment?: string | null;
-  createdAt: Date;
-}
-
-export interface CreateReviewDTO {
-    reviewerId: string;
-    reviewedUserId: string;
-    rating: number;
-    comment: string;
-}
-
-export interface ReviewResponse {
-  id: string;
-  reviewerId: string;
-  reviewedUserId: string;
-  rating: number;
-  comment?: string;
-  createdAt: Date;
-  reviewer: {
-    id: string;
-    uId: string;
-    name: string;
-    avatar?: string | null;
-  };
-}
-
-export interface UserReviewsResponse {
-  reviews: ReviewResponse[];
-  averageRating: number;
-  totalReviews: number;
-}
-
-// ============================================
 // SAVE SERVICE TYPES
 // ============================================
 

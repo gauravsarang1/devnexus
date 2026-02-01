@@ -1,7 +1,7 @@
 services:
   api:
     image: node:20-alpine
-    container_name: skillswap_api
+    container_name: devnexus_api
     working_dir: /app
     ports:
       - "4000:4000"
@@ -16,8 +16,12 @@ services:
 
   mongodb:
     image: mongo:6
-    container_name: skillswap_mongodb
-    command: mongod --replSet rs0 --bind_ip_all
+    container_name: devnexus_mongodb
+    command: >
+      mongod
+      --replSet rs0
+      --bind_ip_all
+      --port 27017
     ports:
       - "27017:27017"
     volumes:
@@ -25,7 +29,7 @@ services:
 
   redis:
     image: redis:7
-    container_name: skillswap_redis
+    container_name: devnexus_redis
 
 volumes:
   mongodb_data:
