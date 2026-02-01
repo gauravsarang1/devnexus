@@ -5,7 +5,6 @@ import { PrismaError, prismaErrorHandler } from '../utils/prismaErrorHandler.js'
 import * as PrismaModule from '@prisma/client';
 import { HttpError } from "../errors/HttpError.js";
 
-
 /**
  * Fixed: Cast Prisma from module to any to bypass missing export error.
  * This allows access to Prisma error types for instanceof checks.
