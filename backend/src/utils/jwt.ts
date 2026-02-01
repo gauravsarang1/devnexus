@@ -13,8 +13,6 @@ export const generateAccessToken = (
     { expiresIn: Math.floor(expiresInMs / 1000) }
   );
 };
-
-
 export const generateRefreshToken = (userId: string) => {
   return jwt.sign({ userId }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
 };

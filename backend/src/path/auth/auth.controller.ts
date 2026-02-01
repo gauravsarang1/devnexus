@@ -14,7 +14,7 @@ export const authController = {
             next(error);
         }
     },
-
+    
     me: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const userId = req.userId!;
