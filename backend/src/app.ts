@@ -21,6 +21,7 @@ import mediaRouter from './path/media/media.route.js';
 import notificationRouter from './path/notification/notification.route.js';
 import aiRouter from './path/ai/ai.route.js';
 import skillOnUserRouter from './path/skill-on-user/skill-on-user.route.js';
+import postRouter from './path/post/post.route.js';
 
 export const app = express();
 

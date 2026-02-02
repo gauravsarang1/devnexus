@@ -4,7 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
 import { SaveValidation } from "../../validation/save/save.validation.js";
 
-export const saveRouter = Router();
+const saveRouter = Router();
 
 saveRouter.post(
     "/toggle",
@@ -12,3 +12,5 @@ saveRouter.post(
     validate(SaveValidation.toggleSave),
     saveController.toggleSave
 );
+
+export default saveRouter;

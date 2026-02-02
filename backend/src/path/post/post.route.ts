@@ -4,7 +4,7 @@ import { validate } from "../../middleware/validate.js";
 import { PostValidation } from "../../validation/post/post.validation.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 
-export const postRouter = Router();
+const postRouter = Router();
 
 postRouter.post(
     "/",
@@ -44,3 +44,5 @@ postRouter.delete(
     validate(PostValidation.deletePost),
     postController.deletePost
 );
+
+export  default postRouter;
