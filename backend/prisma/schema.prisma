@@ -315,6 +315,9 @@ model MentionOnPost {
   @@index([userId])
   @@index([projectId])
   @@index([mentionType])
+
+  @@unique([postId, userId])
+  @@unique([postId, projectId])
 }
 
 model Post {
@@ -357,6 +360,10 @@ model Like {
   @@index([reviewId])
   @@index([postId])
   @@index([likeType])
+
+  @@unique([userId, projectId])
+  @@unique([userId, postId])
+  @@unique([userId, reviewId])
 }
 
 model Save {
@@ -377,4 +384,7 @@ model Save {
   @@index([postId])
   @@index([projectId])
   @@index([saveType])
+
+  @@unique([saverId, postId])
+  @@unique([saverId, projectId])
 }
