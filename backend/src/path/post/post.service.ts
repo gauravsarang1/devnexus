@@ -86,7 +86,7 @@ export class PostService {
             }
             : undefined;
 
-        const [posts, total] = await prisma.$transaction([
+        const [posts, total] = await Promise.all([
             prisma.post.findMany({
                 where,
                 skip,
@@ -104,7 +104,7 @@ export class PostService {
                 total,
                 totalPages: Math.ceil(total / limit)
             },
-            data: posts.map(PostHelper.formatPost)
+            data: posts.map((p) => PostHelper.formatPost(p))
         };
     }
 

@@ -14,12 +14,12 @@ export class PostHelper {
             id: post.id,
             content: post.content,
 
-            author: this.formatUser(post.author),
+            author: post.author ? this.formatUser(post.author): null,
 
             createdAt: post.createdAt,
             updatedAt: post.updatedAt,
 
-            mentions: post.mentionsOnPost.map((m: any) => ({
+            mentions: (post.mentionsOnPost ?? []).map((m: any) => ({
                 id: m.id,
                 mentionType: m.mentionType,
 
