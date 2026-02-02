@@ -4,7 +4,7 @@ import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
 import { LikeValidation } from "../../validation/like/like.validation.js";
 
-export const likeRouter = Router();
+const likeRouter = Router();
 
 likeRouter.post(
     "/toggle",
@@ -12,3 +12,11 @@ likeRouter.post(
     validate(LikeValidation.toggleLike),
     likeController.toggleLike
 );
+
+likeRouter.get(
+    "/",
+    validate(LikeValidation.getAll),
+    likeController.getAll
+);
+
+export default likeRouter
