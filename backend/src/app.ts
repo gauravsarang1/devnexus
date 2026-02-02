@@ -50,6 +50,7 @@ app.use('/api/media', mediaRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/skillOnUser', skillOnUserRouter)
+app.use('/api/posts', postRouter);
 
 app.use(notFound);
 app.use(errorHandler);
