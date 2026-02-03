@@ -8,7 +8,7 @@ import {
     CreateReviewDTO,
     ReviewResponse
 } from './review.type.js'
-import { ReviewTargetType, Review } from '@prisma/client'
+import { Review } from '@prisma/client'
 import { ReviewNotifier } from './review.notification.js'
 import { ReviewHelper } from './review.helper.js'
 
@@ -18,8 +18,23 @@ interface ReviewSearchParams extends SearchParams {
 }
 
 export class ReviewService {
-    
     static async createReview(data: CreateReviewDTO): Promise<ReviewResponse> {
+        if (!!data.userId === !!data.projectId) {
+            throw new BadRequestError("Review must target either a user or a project");
+        }
+
+        const existingReview = await prisma.review.findFirst({
+            where: {
+                reviewerId: data.reviewerId,
+                ...(data.userId && { userId: data.userId }),
+                ...(data.projectId && { projectId: data.projectId }),
+            },
+        });
+
+        if (existingReview) {
+            throw new BadRequestError("You have already reviewed this entity");
+        }
+
         const reviewData = ReviewHelper.createReviewData(data);
 
         const review = await prisma.review.create({
@@ -31,23 +46,23 @@ export class ReviewService {
                         name: true,
                         uId: true,
                         photo: {
-                            where: {
-                                type: "AVATAR"
-                            }
-                        }
-                    }
-                }
-            }
+                            where: { type: "AVATAR" },
+                            take: 1,
+                        },
+                    },
+                },
+            },
         });
 
-        const formattedReview = {
+        const formattedReview: ReviewResponse = {
             ...review,
-            reviewer: ReviewHelper.formatReviewer(review.reviewer)
+            reviewer: ReviewHelper.formatReviewer(review.reviewer),
         };
+
         ReviewNotifier.createReview(formattedReview);
 
         return formattedReview;
-    };
+    }
 
     static async getReviews(params: ReviewSearchParams): Promise<{ reviews: Review[]; pagination: { total: number; page: number; limit: number; pages: number; hasNextPage: boolean } }> {
         const page = params.page ? parseInt(params.page as string, 10) : 1;
@@ -62,7 +77,7 @@ export class ReviewService {
         }
 
         if (reviewedUserId) {
-            orConditions.push({ reviewedUserId });
+            orConditions.push({ uerId: reviewedUserId });
         }
 
         const [reviews, total] = await Promise.all([
@@ -128,7 +143,7 @@ export class ReviewService {
     static async deleteReview(reviewId: string, currentUser: string): Promise<null> {
         const existingReview = await prisma.review.findUnique({ where: { id: reviewId } });
         if (!existingReview) throw new NotFoundError("Review not found");
-        if (existingReview.reviewerId !== currentUser && existingReview.userId !== currentUser) throw new BadRequestError("Unauthorized: you can not update this review");
+        if (existingReview.reviewerId !== currentUser) throw new BadRequestError("Unauthorized: you can not update this review");
 
         const review = await prisma.review.delete({
             where: {
@@ -150,9 +165,8 @@ export class ReviewService {
     };
 
     static async getAllReviews(
-        targetId: string,
-        targetType: ReviewTargetType,
-        currentUserId: string,
+        userId: string | null,
+        projectId: string | null,
         params: SearchParams
     ): Promise<{
         reviews: ReviewResponse[];
@@ -164,25 +178,33 @@ export class ReviewService {
             hasNextPage: boolean;
         };
     }> {
+        if (!!userId === !!projectId) {
+            throw new Error("Provide either userId or projectId, not both");
+        }
+
         const page = params.page ? parseInt(params.page as string, 10) : 1;
         const limit = params.limit ? parseInt(params.limit as string, 10) : 10;
         const skip = (page - 1) * limit;
 
-        const where = ReviewHelper.buildReviewWhereClause(targetType, targetId);
+        const where = ReviewHelper.buildReviewWhereClause({
+            ...(userId && { userId }),
+            ...(projectId && { projectId }),
+        });
 
         const [reviews, total] = await Promise.all([
             prisma.review.findMany({
                 where,
                 skip,
                 take: limit,
-                orderBy: { createdAt: 'desc' },
+                orderBy: { createdAt: "desc" },
                 include: {
                     reviewer: {
                         select: {
                             name: true,
                             uId: true,
                             photo: {
-                                where: { type: 'AVATAR' },
+                                where: { type: "AVATAR" },
+                                take: 1,
                             },
                         },
                     },
@@ -209,25 +231,15 @@ export class ReviewService {
     }
 
     static async getStats(userId: string, currentUserId: string): Promise<any> {
-        const reviews = await prisma.review.findMany({
-            where: {
-                userId,
-            },
-            select: {
-                rating: true,
-            },
+        const result = await prisma.review.aggregate({
+            where: { userId },
+            _count: true,
+            _avg: { rating: true },
         });
 
-        const totalReviews = reviews.length;
-
-        const avgRating =
-            totalReviews === 0
-                ? 0
-                : reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews;
-
         return {
-            totalReviews,
-            avgRating,
+            totalReviews: result._count,
+            avgRating: result._avg,
         };
     };
 
@@ -241,7 +253,6 @@ export class ReviewService {
                 where: { userId: reviewedUserId },
                 skip,
                 take: limit,
-                include: { reviewer: { select: { name: true, avatar: true } } }
             }),
             prisma.review.count({
                 where: { userId: reviewedUserId }

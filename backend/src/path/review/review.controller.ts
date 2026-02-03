@@ -4,7 +4,7 @@ import { ReviewService } from "./review.service.js";
 import { errorResponse, successResponse } from "../../utils/apiResponse.js";
 
 export const reviewController = {
-    
+
     createReview: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const reviewerId = req.userId!;
@@ -44,24 +44,28 @@ export const reviewController = {
 
     getAllReviews: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const {targetId, targetType } = req.validated?.params;
-            const query = req.validated?.query;
-            const currentUserId = req.userId!;
-    
-            const result = await ReviewService.getAllReviews(targetId, targetType, currentUserId, query);
+            const { userId, projectId } = req.validated!.params!;
+            const query = req.validated!.query!;
+
+            const result = await ReviewService.getAllReviews(
+                userId ?? null,
+                projectId ?? null,
+                query
+            );
+
             return successResponse(res, result, "Reviews retrieved successfully");
         } catch (error) {
-            next(error)
+            next(error);
         }
     },
 
     getStats: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const {userId} = req.validated?.params;
+            const { userId } = req.validated?.params;
             const currentUserId = req.userId!;
-    
+
             const result = await ReviewService.getStats(userId, currentUserId);
-            return successResponse(res, result, "Stats retrieved successfully"); 
+            return successResponse(res, result, "Stats retrieved successfully");
         } catch (error) {
             next(error)
         }
@@ -74,7 +78,7 @@ export const reviewController = {
             const { reviewId } = req.validated?.params;
             const data = req.validated!.body!;
 
-            const result = await ReviewService.editReview(reviewId,reviewerId, data);
+            const result = await ReviewService.editReview(reviewId, reviewerId, data);
             return successResponse(res, result, "Review updated successfully");
         } catch (error) {
             next(error);

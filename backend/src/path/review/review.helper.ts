@@ -1,42 +1,26 @@
-import { ReviewTargetType } from "@prisma/client";
 import { CreateReviewDTO } from "./review.type.js";
 
 export class ReviewHelper {
-    static buildReviewWhereClause(
-        targetType: ReviewTargetType,
-        targetId: string
-    ) {
-        switch (targetType) {
-            case ReviewTargetType.USER:
-                return { userId: targetId };
+    static buildReviewWhereClause(target: {
+        userId?: string;
+        projectId?: string;
+    }) {
+        const { userId, projectId } = target;
 
-            case ReviewTargetType.POST:
-                return { postId: targetId };
+        if (userId) return { userId };
+        if (projectId) return { projectId };
 
-            case ReviewTargetType.PROJECT:
-                return { projectId: targetId };
-
-            default:
-                throw new Error(`Unsupported review target type: ${targetType}`);
-        }
+        throw new Error("Invalid review target");
     }
 
     static createReviewData(data: CreateReviewDTO) {
-        const { targetId, targetType, ...rest } = data;
+        const { userId, projectId, ...rest } = data;
 
-        switch (targetType) {
-            case ReviewTargetType.POST:
-                return { postId: targetId, targetType, ...rest };
-
-            case ReviewTargetType.PROJECT:
-                return { projectId: targetId, targetType, ...rest };
-
-            case ReviewTargetType.USER:
-                return { userId: targetId, targetType, ...rest };
-
-            default:
-                throw new Error(`Unsupported review target type: ${targetType}`);
-        }
+        return {
+            ...(userId && { userId }),
+            ...(projectId && { projectId }),
+            ...rest,
+        };
     }
 
     static formatReviewer(reviewer: any) {
@@ -46,5 +30,4 @@ export class ReviewHelper {
             avatar: photo[0]?.url ?? null,
         };
     }
-
 }

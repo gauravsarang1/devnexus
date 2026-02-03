@@ -1,10 +1,9 @@
-import { ReviewTargetType } from "@prisma/client";
 import { Review } from "@prisma/client";
 
 export interface CreateReviewDTO {
     reviewerId: string;
-    targetType: ReviewTargetType
-    targetId: string;
+    userId?: string | null;
+    projectId?: string | null;
     rating: number;
     comment: string;
 }
