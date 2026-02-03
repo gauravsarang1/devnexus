@@ -60,7 +60,7 @@ export class PostService {
                 total,
                 totalPages: Math.ceil(total / limit)
             },
-            data: posts.map(PostHelper.formatPost)
+            posts: posts.map(PostHelper.formatPost)
         };
     }
 
@@ -98,13 +98,13 @@ export class PostService {
         ]);
 
         return {
-            meta: {
+            pagination: {
                 page,
                 limit,
                 total,
                 totalPages: Math.ceil(total / limit)
             },
-            data: posts.map((p) => PostHelper.formatPost(p))
+            posts: posts.map((p) => PostHelper.formatPost(p))
         };
     }
 
