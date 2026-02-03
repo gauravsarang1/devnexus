@@ -8,20 +8,20 @@ export const SaveValidation = {
                 postId: objectId.optional(),
                 projectId: objectId.optional()
             })
-            .superRefine((data, ctx) => {
-                const targets = [
-                    data.postId,
-                    data.projectId
-                ].filter(Boolean);
-
-                if (targets.length !== 1) {
-                    ctx.addIssue({
-                        path: [],
-                        message:
-                            "Exactly one of postId or projectId is required",
-                        code: z.ZodIssueCode.custom
-                    });
+            .refine(
+                (data) => !(data.postId && data.projectId),
+                {
+                    message: "Provide either postId or projectId, not both",
                 }
-            })
+            ),
+    }),
+
+    getAllSaves: z.object({
+        query: z.object({
+            page: z.string().optional(),
+            limit: z.string().optional(),
+            saveType: z.enum(["POST", "PROJECT"]).optional()
+        })
     })
+
 };

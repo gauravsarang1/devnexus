@@ -25,5 +25,29 @@ export const saveController = {
         } catch (error) {
             next(error);
         }
+    },
+
+    getAllSaves: async (
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const saverId = req.userId!;
+            const query = req.validated?.query;
+
+            const result = await SaveService.getAllSaves(
+                saverId,
+                query
+            );
+
+            return successResponse(
+                res,
+                result,
+                "Saves fetched successfully"
+            );
+        } catch (error) {
+            next(error)
+        }
     }
 };

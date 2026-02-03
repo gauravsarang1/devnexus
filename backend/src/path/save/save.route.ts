@@ -13,4 +13,11 @@ saveRouter.post(
     saveController.toggleSave
 );
 
+saveRouter.get(
+    "/",
+    requireAuth,
+    validate(SaveValidation.getAllSaves),
+    saveController.getAllSaves
+);
+
 export default saveRouter;
