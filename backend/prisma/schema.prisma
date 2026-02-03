@@ -245,6 +245,9 @@ model Review {
   @@index([reviewerId])
   @@index([userId])
   @@index([projectId])
+
+  @@unique([reviewerId, userId])
+  @@unique([reviewerId, projectId])
 }
 
 model Photo {
