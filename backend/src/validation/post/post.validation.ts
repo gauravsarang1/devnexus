@@ -1,6 +1,18 @@
 import z from "zod";
 import { objectId } from "../common/objectId.js";
 
+const mentionSchema = z
+    .object({
+        userId: objectId.optional(),
+        projectId: objectId.optional(),
+    })
+    .refine(
+        (data) => !!data.userId !== !!data.projectId,
+        {
+            message: "Exactly one of userId or projectId must be provided",
+        }
+    );
+
 export const PostValidation = {
     createPost: z.object({
         body: z.object({
@@ -9,102 +21,48 @@ export const PostValidation = {
                 .min(1, "Post content cannot be empty")
                 .max(5000, "Post content is too long"),
 
-            mentionsOnPost: z
-                .array(
-                    z.object({
-                        userId: objectId.optional(),
-                        projectId: objectId.optional(),
-                    })
-                )
-                .optional()
-        })
-            .superRefine((data, ctx) => {
-                if (!data.mentionsOnPost) return;
-
-                data.mentionsOnPost.forEach((mention, index) => {
-                    const hasUser = !!mention.userId;
-                    const hasProject = !!mention.projectId;
-
-                    if (hasUser === hasProject) {
-                        ctx.addIssue({
-                            path: ["mentionsOnPost", index],
-                            message:
-                                "Exactly one of userId or projectId must be provided",
-                            code: z.ZodIssueCode.custom
-                        });
-                    }
-                });
-            })
+            mentionsOnPost: z.array(mentionSchema).optional(),
+        }),
     }),
 
     updatePost: z.object({
         params: z.object({
-            postId: objectId
+            postId: objectId,
         }),
-        body: z
-            .object({
-                content: z
-                    .string()
-                    .min(1)
-                    .max(5000)
-                    .optional(),
-
-                mentionsOnPost: z
-                    .array(
-                        z.object({
-                            userId: objectId.optional(),
-                            projectId: objectId.optional(),
-                        })
-                    )
-                    .optional()
-            })
-            .superRefine((data, ctx) => {
-                if (!data.mentionsOnPost) return;
-
-                data.mentionsOnPost.forEach((mention, index) => {
-                    const hasUser = !!mention.userId;
-                    const hasProject = !!mention.projectId;
-
-                    if (hasUser === hasProject) {
-                        ctx.addIssue({
-                            path: ["mentionsOnPost", index],
-                            message:
-                                "Exactly one of userId or projectId must be provided",
-                            code: z.ZodIssueCode.custom
-                        });
-                    }
-                });
-            })
+        body: z.object({
+            content: z.string().min(1).max(5000).optional(),
+            mentionsOnPost: z.array(mentionSchema).optional(),
+        }),
     }),
 
     getPostById: z.object({
         params: z.object({
-            postId: objectId
-        })
+            postId: objectId,
+        }),
     }),
 
     getPostsByAuthor: z.object({
         params: z.object({
-            authorId: objectId
+            authorId: objectId,
         }),
         query: z.object({
             page: z.string().optional(),
             limit: z.string().optional(),
-            search: z.string().optional()
-        })
+            search: z.string().optional(),
+        }),
     }),
 
     getPosts: z.object({
         query: z.object({
             page: z.string().optional(),
             limit: z.string().optional(),
-            search: z.string().optional()
-        })
+            search: z.string().optional(),
+        }),
     }),
 
     deletePost: z.object({
         params: z.object({
-            postId: objectId
-        })
-    })
+            postId: objectId,
+        }),
+    }),
 };
