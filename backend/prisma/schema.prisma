@@ -71,11 +71,6 @@ enum Like_Type {
   REVIEW
 }
 
-enum Comment_Type {
-  POST
-  PROJECT
-}
-
 // --- MODELS ---
 
 model User {
@@ -253,7 +248,6 @@ model Review {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   reviewerId String           @db.ObjectId
-  targetType ReviewTargetType
 
   userId    String? @db.ObjectId
   projectId String? @db.ObjectId
@@ -271,7 +265,6 @@ model Review {
   @@index([reviewerId])
   @@index([userId])
   @@index([projectId])
-  @@index([targetType])
 }
 
 model Photo {
@@ -325,7 +318,6 @@ model MentionOnPost {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   postId String @db.ObjectId
 
-  mentionType mention_type
   userId      String?      @db.ObjectId
   projectId   String?      @db.ObjectId
 
@@ -338,7 +330,6 @@ model MentionOnPost {
   @@index([postId])
   @@index([userId])
   @@index([projectId])
-  @@index([mentionType])
 
   @@unique([postId, userId])
   @@unique([postId, projectId])
@@ -366,7 +357,6 @@ model Post {
 model Like {
   id         String  @id @default(auto()) @map("_id") @db.ObjectId
   userId     String  @db.ObjectId
-  likeType   Like_Type
 
   projectId   String?  @db.ObjectId
   postId      String?  @db.ObjectId
@@ -383,7 +373,6 @@ model Like {
   @@index([projectId])
   @@index([reviewId])
   @@index([postId])
-  @@index([likeType])
 
   @@unique([userId, projectId])
   @@unique([userId, postId])
@@ -394,7 +383,6 @@ model Save {
   id      String @id @default(auto()) @map("_id") @db.ObjectId
   saverId String @db.ObjectId
 
-  saveType  Save_Type
   postId    String?   @db.ObjectId
   projectId String?   @db.ObjectId
 
@@ -407,7 +395,6 @@ model Save {
   @@index([saverId])
   @@index([postId])
   @@index([projectId])
-  @@index([saveType])
 
   @@unique([saverId, postId])
   @@unique([saverId, projectId])
