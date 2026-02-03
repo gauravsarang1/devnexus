@@ -1,13 +1,10 @@
 import z from "zod";
 import { objectId } from "../common/objectId.js";
 
-const LikeTypeEnum = z.enum(["POST", "PROJECT", "REVIEW"]);
-
 export const LikeValidation = {
     toggleLike: z.object({
         body: z
             .object({
-                likeType: z.coerce.string().pipe(LikeTypeEnum),
                 postId: objectId.optional(),
                 projectId: objectId.optional(),
                 reviewId: objectId.optional()
