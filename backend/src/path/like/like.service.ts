@@ -88,7 +88,7 @@ export class LikeService {
                 total,
                 totalPages: Math.ceil(total / limit)
             },
-            data: likes.map(like => ({
+            likes: likes.map(like => ({
                 id: like.id,
                 createdAt: like.createdAt,
                 user: {
