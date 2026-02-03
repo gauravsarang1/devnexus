@@ -1,12 +1,10 @@
 import z from "zod";
 import { objectId } from "../common/objectId.js";
-import { Save_Type } from "@prisma/client";
 
 export const SaveValidation = {
     toggleSave: z.object({
         body: z
             .object({
-                saveType: z.nativeEnum(Save_Type),
                 postId: objectId.optional(),
                 projectId: objectId.optional()
             })
