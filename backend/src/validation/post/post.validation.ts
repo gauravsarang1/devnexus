@@ -1,6 +1,5 @@
 import z from "zod";
 import { objectId } from "../common/objectId.js";
-import { mention_type } from "@prisma/client";
 
 export const PostValidation = {
     createPost: z.object({
@@ -15,7 +14,6 @@ export const PostValidation = {
                     z.object({
                         userId: objectId.optional(),
                         projectId: objectId.optional(),
-                        mentionType: z.nativeEnum(mention_type)
                     })
                 )
                 .optional()
@@ -56,7 +54,6 @@ export const PostValidation = {
                         z.object({
                             userId: objectId.optional(),
                             projectId: objectId.optional(),
-                            mentionType: z.nativeEnum(mention_type)
                         })
                     )
                     .optional()
