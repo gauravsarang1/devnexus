@@ -57,7 +57,6 @@ enum mention_type {
 
 enum ReviewTargetType {
   USER
-  POST
   PROJECT
 }
 
@@ -70,6 +69,11 @@ enum Like_Type {
   POST
   PROJECT
   REVIEW
+}
+
+enum Comment_Type {
+  POST
+  PROJECT
 }
 
 // --- MODELS ---
@@ -222,6 +226,29 @@ model Notification {
   @@index([userId])
 }
 
+model Comment {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  content         String
+
+  authorId        String   @db.ObjectId
+  postId          String?  @db.ObjectId
+  projectId       String?  @db.ObjectId
+  parentCommentId String?  @db.ObjectId
+
+  author          User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post            Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  project         Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([postId])
+  @@index([projectId])
+  @@index([parentCommentId])
+}
+
+
 model Review {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
@@ -229,23 +256,20 @@ model Review {
   targetType ReviewTargetType
 
   userId    String? @db.ObjectId
-  postId    String? @db.ObjectId
   projectId String? @db.ObjectId
 
-  rating    Int
+  rating    Int     @default(0)
   comment   String?
   createdAt DateTime @default(now())
 
   reviewer User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
   user     User?    @relation("ReviewsReceived", fields: [userId], references: [id])
-  post     Post?    @relation(fields: [postId], references: [id])
   project  Project? @relation(fields: [projectId], references: [id])
 
   likes    Like[]
 
   @@index([reviewerId])
   @@index([userId])
-  @@index([postId])
   @@index([projectId])
   @@index([targetType])
 }
