@@ -23,6 +23,7 @@ import aiRouter from './path/ai/ai.route.js';
 import skillOnUserRouter from './path/skill-on-user/skill-on-user.route.js';
 import postRouter from './path/post/post.route.js';
 import likeRouter from './path/like/like.route.js';
+import projectRouter from './path/project/project.route.js';
 
 export const app = express();
 
@@ -53,6 +54,7 @@ app.use('/api/ai', aiRouter);
 app.use('/api/skillOnUser', skillOnUserRouter)
 app.use('/api/posts', postRouter);
 app.use('/api/likes', likeRouter);
+app.use('/api/projects', projectRouter);
 
 app.use(notFound);
 app.use(errorHandler);
