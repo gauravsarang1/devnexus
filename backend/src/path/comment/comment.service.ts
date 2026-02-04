@@ -3,6 +3,7 @@ import { BadRequestError } from "../../errors/BadRequestError.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { CreateCommentDTO } from "./comment.type.js";
 import { SearchParams } from "../../types/search-params.js";
+import { buildPagination, parsePaginationParams } from "../../utils/pagination.js";
 
 export class CommentService {
 
@@ -36,8 +37,7 @@ export class CommentService {
         target: { postId?: string; projectId?: string },
         params: SearchParams
     ) {
-        const page = params.page ? parseInt(params.page, 10) : 1;
-        const limit = params.limit ? parseInt(params.limit, 10) : 10;
+        const { page, limit } = parsePaginationParams(params);
         const skip = (page - 1) * limit;
 
         const where = {
@@ -66,7 +66,10 @@ export class CommentService {
             prisma.comment.count({ where }),
         ]);
 
-        return { comments, total };
+        return { 
+            comments,
+            pagination: buildPagination(page, limit, total)
+        };
     }
 
     static async deleteComment(commentId: string, userId: string) {
