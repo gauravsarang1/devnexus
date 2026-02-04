@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma.js";
 import { CreatePostDTO } from "./post.type.js";
-import { PostHelper, postInclude, buildSearchWhere, buildPagination, parsePaginationParams } from "./post.helper.js";
+import { PostHelper, postInclude, buildSearchWhere } from "./post.helper.js";
+import { buildPagination, parsePaginationParams } from "../../utils/pagination.js";
 import { PostNotifier } from "./post.notification.js";
 import { SearchParams } from "../../types/search-params.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
