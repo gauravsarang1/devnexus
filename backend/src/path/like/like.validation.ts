@@ -1,5 +1,5 @@
 import z from "zod";
-import { objectId } from "../../common/objectId.js";
+import { objectId } from "../../common/zod/objectId.js";
 
 export const LikeValidation = {
     toggleLike: z.object({

@@ -1,5 +1,5 @@
 import z from "zod";
-import { objectId } from "../../common/objectId.js";
+import { objectId } from "../../common/zod/objectId.js";
 
 const mentionSchema = z
     .object({

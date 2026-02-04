@@ -3,7 +3,7 @@ import { Router } from "express";
 import { aiController } from "./ai.controller.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
-import { AiValidation } from "../../validation/ai/ai.validation.js";
+import { AiValidation } from "./ai.validation.js";
 
 const router = Router();
 

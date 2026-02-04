@@ -1,7 +1,6 @@
 
 import z from 'zod';
-import { objectId } from '../common/objectId.js';
-import { id } from 'zod/locales';
+import { objectId } from '../../common/zod/objectId.js';
 
 export const createChatSchema = z.object({
     body: z.object({

@@ -9,7 +9,7 @@ import {
     deleteChatSchema,
     getAllChatsSchema,
     getChatByIdSchema,
-} from "../../validation/chat/chat.validation.js";
+} from "./chat.validation.js";
 
 const router = Router();
 
