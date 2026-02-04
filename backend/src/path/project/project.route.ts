@@ -14,6 +14,37 @@ projectRouter.post(
 );
 
 projectRouter.get(
+    "/",
+    validate(ProjectValidation.getAllProjects),
+    projectController.getAllProjects
+);
+
+projectRouter.get(
+    "/feed/personalized",
+    requireAuth,
+    validate(ProjectValidation.getPersonalizedFeed),
+    projectController.getPersonalizedFeed
+);
+
+projectRouter.get(
+    "/feed/trending",
+    validate(ProjectValidation.getTrendingProjects),
+    projectController.getTrendingProjects
+);
+
+projectRouter.get(
+    "/user/:userId",
+    validate(ProjectValidation.getByUserId),
+    projectController.getByUserId
+);
+
+projectRouter.get(
+    "/slug/:slug",
+    validate(ProjectValidation.getBySlug),
+    projectController.getBySlug
+);
+
+projectRouter.get(
     "/:projectId",
     validate(ProjectValidation.getById),
     projectController.getById
@@ -32,3 +63,5 @@ projectRouter.delete(
     validate(ProjectValidation.delete),
     projectController.delete
 );
+
+export default projectRouter;
