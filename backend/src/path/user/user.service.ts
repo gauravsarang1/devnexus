@@ -91,8 +91,10 @@ export class UserService {
       prisma.review.findFirst({
         where: {
           reviewerId: currentUserId,
+          userId: user.id,
         },
       }),
+
     ]);
 
     const formattedUser: UserProfileWithStatus = {
@@ -268,35 +270,15 @@ export class UserService {
     const skip = (page - 1) * limit;
     const search = params.search?.trim();
 
-    const cacheKey = `user:data:${userId}:page:${page}:limit:${limit}:search:${search ?? 'none'}`;
-    const cachedUsers = await getCache(cacheKey);
-
-    if (cachedUsers) {
-      console.log("users fetched from cache ✅");
-      return JSON.parse(cachedUsers);
-    }
-
-    // 🔹 Build where condition safely
-    const where: any = search
-      ? {
+    const where: any = {
+      isEmailVerified: true,
+      ...(search && {
         OR: [
           { name: { contains: search, mode: 'insensitive' } },
           { uId: { contains: search, mode: 'insensitive' } },
-          {
-            skills: {
-              some: {
-                skill: {
-                  name: { contains: search, mode: 'insensitive' },
-                },
-              },
-            },
-          },
         ],
-        isEmailVerified: true,
-      }
-      : {
-        isEmailVerified: true,
-      };
+      }),
+    };
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -352,8 +334,6 @@ export class UserService {
       },
     };
 
-    await setCache(cacheKey, response, 180);
-
     return response as AllUsersResponse;
   }
 
@@ -387,7 +367,7 @@ export class UserService {
     if (!updatedUser) throw new NotFoundError("User not found");
 
     await deleteChache(`user:data:${user.id}`);
-    await deleteChache(`user:uId${updatedUser?.uId}`);
+    await deleteChache(`user:uId:${updatedUser.uId}:*`);
 
     return this.formatUserWithPhotos(updatedUser) as UserProfile;
   }

@@ -162,15 +162,16 @@ export class PostService {
             data: {
                 content: data.content,
                 authorId: data.authorId,
-                mentionsOnPost: data.mentionsOnPost
-                    ? {
+
+                ...(data.mentionsOnPost?.length && {
+                    mentionsOnPost: {
                         createMany: {
-                            data: data.mentionsOnPost
-                        }
-                    }
-                    : undefined
+                            data: data.mentionsOnPost,
+                        },
+                    },
+                }),
             },
-            include: postInclude as any
+            include: postInclude as any,
         });
 
         const formattedPost = PostHelper.formatPost(post);

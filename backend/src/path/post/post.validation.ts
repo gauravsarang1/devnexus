@@ -16,7 +16,7 @@ const mentionSchema = z
 const paginationQuery = z.object({
     page: z.string().optional(),
     limit: z.string().optional(),
-    search: z.string().optional()
+    search: z.string().trim().min(1).optional()
 });
 
 export const PostValidation = {

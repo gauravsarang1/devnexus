@@ -1,6 +1,7 @@
 import prisma from "../../config/prisma.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { SearchParams } from "../../types/search-params.js";
+import { parsePaginationParams } from "../../utils/formats.js";
 import { CreateProjectInput, UpdateProjectInput } from "./project.type.js";
 
 export class ProjectService {
@@ -169,62 +170,18 @@ export class ProjectService {
     }
 
     static async getAllProjects(params: SearchParams) {
-        const page = params.page ? parseInt(params.page, 10) : 1;
-        const limit = params.limit ? parseInt(params.limit, 10) : 10;
+        const { page, limit } = parsePaginationParams(params)
         const skip = (page - 1) * limit;
+        const search = params.search?.trim();
 
-        const [projects, total] = await Promise.all([
-            prisma.project.findMany({
-                skip,
-                take: limit,
-                orderBy: { createdAt: "desc" },
-                include: {
-                    logo: true,
-                    user: {
-                        select: { id: true, name: true, uId: true },
-                    },
-                    techs: {
-                        include: { skill: true },
-                    },
-                },
-            }),
-            prisma.project.count(),
-        ]);
-
-        return {
-            projects,
-            pagination: {
-                total,
-                page,
-                limit,
-                pages: Math.ceil(total / limit),
-                hasNextPage: page * limit < total,
-            },
-        };
-    }
-
-    static async getPersonalizedFeed(
-        userId: string,
-        params: SearchParams
-    ) {
-        const page = params.page ? parseInt(params.page, 10) : 1;
-        const limit = params.limit ? parseInt(params.limit, 10) : 10;
-        const skip = (page - 1) * limit;
-
-        const userSkills = await prisma.skillOnUser.findMany({
-            where: { userId },
-            select: { skillId: true },
-        });
-
-        const skillIds = userSkills.map(s => s.skillId);
-
-        const where = skillIds.length
+        const where = search
             ? {
-                techs: {
-                    some: {
-                        skillId: { in: skillIds },
-                    },
-                },
+                OR: [
+                    { title: { contains: search, mode: "insensitive" } },
+                    { slug: { contains: search, mode: "insensitive" } },
+                    { tagline: { contains: search, mode: "insensitive" } },
+                    { description: { contains: search, mode: "insensitive" } },
+                ],
             }
             : {};
 
@@ -259,9 +216,68 @@ export class ProjectService {
         };
     }
 
+    static async getPersonalizedFeed(
+        userId: string,
+        params: SearchParams & {
+            search?: string
+        }
+    ) {
+        const { page, limit } = parsePaginationParams(params);
+        const search = params.search?.trim()
+        const skip = (page - 1) * limit;
+
+        const userSkills = await prisma.skillOnUser.findMany({
+            where: { userId },
+            select: { skillId: true },
+        });
+
+        const skillIds = userSkills.map(s => s.skillId);
+
+        const where = {
+            ...(skillIds.length && {
+                techs: { some: { skillId: { in: skillIds } } },
+            }),
+            ...(search && {
+                OR: [
+                    { title: { contains: search, mode: "insensitive" } },
+                    { slug: { contains: search, mode: "insensitive" } },
+                ],
+            }),
+        };
+
+        const [projects, total] = await Promise.all([
+            prisma.project.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: "desc" },
+                include: {
+                    logo: true,
+                    user: {
+                        select: { id: true, name: true, uId: true },
+                    },
+                    techs: {
+                        include: { skill: true },
+                    },
+                },
+            }),
+            prisma.project.count({ where }),
+        ]);
+
+        return {
+            projects,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
+            },
+        };
+    }
+
     static async getTrendingProjects(params: SearchParams) {
-        const page = params.page ? parseInt(params.page, 10) : 1;
-        const limit = params.limit ? parseInt(params.limit, 10) : 10;
+        const { page, limit } = parsePaginationParams(params);
         const skip = (page - 1) * limit;
 
         const projects = await prisma.project.findMany({

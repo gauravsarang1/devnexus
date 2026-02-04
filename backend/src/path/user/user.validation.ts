@@ -1,5 +1,5 @@
 
-import z from "zod";
+import z, { trim } from "zod";
 
 export const UserValidation = {
     getUserById: z.object({
@@ -18,7 +18,7 @@ export const UserValidation = {
         query: z.object({
             page: z.string().optional(),
             limit: z.string().optional(),
-            search: z.string().optional(),
+            search: z.string().trim().optional(),
         }).optional()
     }),
 

@@ -131,3 +131,170 @@ export interface CreateReviewDTO {
   reviewedUserId: string;
   comment?: string;
 }
+
+export interface Post{
+    id: string;
+    content: string;
+
+    author: {
+        id: string;
+        uId: string;
+        name: string;
+        avatar: string | null;
+    };
+
+    createdAt: string;
+    updatedAt: string;
+
+    mentions: {
+        id: string;
+        mentionType: string;
+
+        user: {
+            id: string;
+            uId: string;
+            name: string;
+            avatar: string | null;
+        } | null;
+
+        project: {
+            id: string;
+            title: string;
+            slug: string;
+            logo: string | null;
+        } | null;
+    }[];
+}
+
+
+export type Author = {
+  id: string;
+  uId: string;
+  name: string;
+  avatar: string | null;
+};
+
+export type MentionEntry = {
+  id: string;
+  mentionType: string;
+  user: {
+    id: string;
+    uId: string;
+    name: string;
+    avatar: string | null;
+  } | null;
+  project: {
+    id: string;
+    title: string;
+    slug: string;
+    logo: string | null;
+  } | null;
+};
+
+export type Mention = {
+  id: string;
+  name: string;
+  avatar: string | null;
+  uId?: string;
+  type: 'user' | 'project';
+};
+
+export type Comment = {
+  id: string;
+  content: string;
+  author: Author;
+  createdAt: string;
+  likeCount: number;
+  isLiked: boolean;
+  replies?: Comment[];
+};
+
+export interface Post {
+  id: string;
+  content: string;
+  author: Author;
+  createdAt: string;
+  updatedAt: string;
+  mentions: MentionEntry[];
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+  isSaved: boolean;
+}
+
+export type FeedType = 'global' | 'personalized' | 'trending';
+
+export type CreatePostPayload = {
+  content: string;
+  mentionsOnPost: any[];
+};
+
+export type UserProfile = {
+  id: string;
+  name: string;
+  avatar: string;
+  uId: string;
+};
+
+export type ProjectProfile = {
+  id: string;
+  name: string;
+  avatar: string;
+};
+
+/* ---------------- Sub Types ---------------- */
+
+export type ProjectOwner = {
+  id: string;
+  name: string;
+  uId: string;
+};
+
+export type ProjectLogo = {
+  id: string;
+  url: string;
+};
+
+export type ProjectSkill = {
+  id: string;
+  skill: {
+    id: string;
+    name: string;
+    category?: string;
+    icon?: string;
+  };
+};
+
+export type ProjectCounts = {
+  likes: number;
+  saves: number;
+  reviews: number;
+  comments?: number;
+};
+
+/* ---------------- Main Project Type ---------------- */
+
+export interface Project {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+
+  tagline?: string;
+  whyBuilt?: string;
+  architecture?: string;
+
+  githubUrl?: string;
+  previewUrl?: string;
+
+  createdAt: string;
+  updatedAt: string;
+
+  /* -------- Relations -------- */
+
+  user: ProjectOwner;
+  logo?: ProjectLogo | null;
+  techs: ProjectSkill[];
+
+  _count?: ProjectCounts;
+}

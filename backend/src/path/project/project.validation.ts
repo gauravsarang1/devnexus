@@ -4,7 +4,8 @@ import { objectId } from "../../common/zod/objectId.js";
 const paginationQuery = z.object({
     page: z.string().optional(),
     limit: z.string().optional(),
-});
+    search: z.string().trim().optional(),
+}).optional();
 
 const skillIdsSchema = z.array(objectId).min(1);
 
