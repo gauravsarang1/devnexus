@@ -94,10 +94,11 @@ model Skill {
   description String?
   popularity  Int     @default(0)
   icon        String?
+  createdAt    DateTime      @default(now())
 
   skillOnUsers SkillOnUser[]
   matchSkills  MatchSkill[]
-  createdAt    DateTime      @default(now())
+  projectTechs ProjectTech[]
 }
 
 model SkillOnUser {
@@ -278,7 +279,6 @@ model Project {
   logoId       String? @db.ObjectId @unique
   whyBuilt     String?
   architecture String?
-  techStack    Json?
   githubUrl    String?
   previewUrl   String?
 
@@ -293,8 +293,22 @@ model Project {
   saves          Save[]
   likes          Like[]
   comments       Comment[]
+  techs          ProjectTech[]
 
   @@index([userId])
+}
+
+model ProjectTech {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  projectId String @db.ObjectId
+  skillId   String @db.ObjectId
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([skillId])
+  @@unique([projectId, skillId])
 }
 
 model MentionOnPost {
