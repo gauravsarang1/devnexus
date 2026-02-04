@@ -1,20 +1,12 @@
-import { SearchParams } from "../../types/search-params.js";
+import { formatUser } from "../../utils/formats.js";
 
 export class PostHelper {
-    static formatUser(user: any) {
-        const { photo = [], ...rest } = user ?? {};
-        return {
-            ...rest,
-            avatar: photo[0]?.url ?? null,
-        };
-    }
-
     static formatPost(post: any) {
         return {
             id: post.id,
             content: post.content,
 
-            author: post.author ? this.formatUser(post.author): null,
+            author: post.author ? formatUser(post.author): null,
 
             createdAt: post.createdAt,
             updatedAt: post.updatedAt,
@@ -23,7 +15,7 @@ export class PostHelper {
                 id: m.id,
                 mentionType: m.mentionType,
 
-                user: m.user ? this.formatUser(m.user) : null,
+                user: m.user ? formatUser(m.user) : null,
 
                 project: m.project
                     ? {

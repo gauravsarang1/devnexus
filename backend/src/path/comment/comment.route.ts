@@ -4,7 +4,7 @@ import { validate } from "../../middleware/validate.js";
 import { CommentValidation } from "../../validation/comment/comment.validation.js";
 import { commentController } from "./comment.controller.js";
 
-export const commentRouter = Router();
+const commentRouter = Router();
 
 commentRouter.post(
     "/",
@@ -31,3 +31,5 @@ commentRouter.delete(
     validate(CommentValidation.deleteComment),
     commentController.delete
 );
+
+export default commentRouter

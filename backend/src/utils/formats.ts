@@ -18,3 +18,11 @@ export const parsePaginationParams = (params: SearchParams) => ({
     page: params.page ? parseInt(params.page, 10) : 1,
     limit: params.limit ? parseInt(params.limit, 10) : 10,
 });
+
+export const formatUser = (user: any)  => {
+        const { photo = [], ...rest } = user ?? {};
+        return {
+            ...rest,
+            avatar: photo[0]?.url ?? null,
+        };
+    }

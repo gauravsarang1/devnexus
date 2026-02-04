@@ -3,7 +3,8 @@ import { BadRequestError } from "../../errors/BadRequestError.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
 import { CreateCommentDTO } from "./comment.type.js";
 import { SearchParams } from "../../types/search-params.js";
-import { buildPagination, parsePaginationParams } from "../../utils/pagination.js";
+import { buildPagination, parsePaginationParams } from "../../utils/formats.js";
+import { formatComment } from "./comment.helper.js";
 
 export class CommentService {
 
@@ -12,7 +13,7 @@ export class CommentService {
             throw new BadRequestError("Invalid comment target");
         }
 
-        return prisma.comment.create({
+        const comment = await prisma.comment.create({
             data: {
                 content: data.content,
                 authorId,
@@ -31,6 +32,8 @@ export class CommentService {
                 },
             },
         });
+
+        return formatComment(comment)
     }
 
     static async getComments(
@@ -40,10 +43,14 @@ export class CommentService {
         const { page, limit } = parsePaginationParams(params);
         const skip = (page - 1) * limit;
 
+        if (!!target.postId === !!target.projectId) {
+            throw new BadRequestError("Provide either postId or projectId");
+        }
+
         const where = {
             ...(target.postId && { postId: target.postId }),
             ...(target.projectId && { projectId: target.projectId }),
-            parentCommentId: null,
+            parentCommentId: { equals: null },
         };
 
         const [comments, total] = await prisma.$transaction([
@@ -66,8 +73,8 @@ export class CommentService {
             prisma.comment.count({ where }),
         ]);
 
-        return { 
-            comments,
+        return {
+            comments: comments.map((c) => formatComment(c)),
             pagination: buildPagination(page, limit, total)
         };
     }
