@@ -1,19 +1,7 @@
 import prisma from "../../config/prisma.js";
 import { NotFoundError } from "../../errors/NotFoundError.js";
-import { BadRequestError } from "../../errors/BadRequestError.js";
 import { SearchParams } from "../../types/search-params.js";
-
-interface CreateProjectInput {
-    title: string;
-    description: string;
-    slug: string;
-    tagline?: string;
-    githubUrl?: string;
-    previewUrl?: string;
-    skillIds?: string[];
-}
-
-interface UpdateProjectInput extends Partial<CreateProjectInput> { }
+import { CreateProjectInput, UpdateProjectInput } from "./project.type.js";
 
 export class ProjectService {
 
