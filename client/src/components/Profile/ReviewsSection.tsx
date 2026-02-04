@@ -8,8 +8,6 @@ interface ReviewsSectionProps {
 }
 
 const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews, stats }) => {
-  console.log("stats", stats)
-  console.log("hello")
   return (
     <section className="mt-12">
       <div className="flex items-center justify-between mb-8">
@@ -20,7 +18,7 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ reviews, stats }) => {
               <Star size={16} fill="currentColor" />
             </div>
             <span className="text-sm font-bold text-slate-600">
-              {"0.0"} ({stats.totalReviews}{" "}
+              {stats.avgRating?.toFixed(1) || "0.0"} ({stats.totalReviews}{" "}
               reviews)
             </span>
           </div>
