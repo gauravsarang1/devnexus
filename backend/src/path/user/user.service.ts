@@ -262,7 +262,6 @@ export class UserService {
     userId: string,
     params: PaginationParams
   ): Promise<AllUsersResponse> {
-    console.log("User", userId)
 
     const page = Number(params.page) || 1;
     const limit = Number(params.limit) || 10;
