@@ -50,10 +50,31 @@ export const postController = {
         try {
             const query = req.validated!.query!;
 
-            const data = await PostService.findMany(query);
+            const data = await PostService.getGlobalFeed(query);
             return successResponse(res, data, "Posts fetched successfully");
         } catch (error) {
             next(error);
+        }
+    },
+
+    getPersonalizedFeed: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const data = await PostService.getPersonalizedFeed(
+                req.userId!,
+                req.validated!.query!
+            );
+            return successResponse(res, data, "Personalized feed fetched");
+        } catch (e) {
+            next(e);
+        }
+    },
+
+    getTrendingFeed: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const data = await PostService.getTrendingFeed(req.validated!.query!);
+            return successResponse(res, data, "Trending posts fetched");
+        } catch (e) {
+            next(e);
         }
     },
 

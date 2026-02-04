@@ -1,4 +1,3 @@
-import { mention_type } from "@prisma/client";
 
 export interface CreatePostDTO {
     content: string;
@@ -7,7 +6,6 @@ export interface CreatePostDTO {
     mentionsOnPost?: {
         userId?: string;
         projectId?: string;
-        mentionType: mention_type; // ✅ MUST match Prisma
     }[];
 }
 

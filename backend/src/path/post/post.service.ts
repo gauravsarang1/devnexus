@@ -1,7 +1,10 @@
 import prisma from "../../config/prisma.js";
 import { CreatePostDTO } from "./post.type.js";
-import { PostHelper, postInclude } from "./post.helper.js";
+import { PostHelper, postInclude, buildSearchWhere, buildPagination, parsePaginationParams } from "./post.helper.js";
 import { PostNotifier } from "./post.notification.js";
+import { SearchParams } from "../../types/search-params.js";
+import { NotFoundError } from "../../errors/NotFoundError.js";
+import { BadRequestError } from "../../errors/BadRequestError.js";
 
 export class PostService {
     static async findById(postId: string) {
@@ -11,35 +14,24 @@ export class PostService {
         });
 
         if (!post) {
-            throw new Error("Post not found");
+            throw new NotFoundError("Post not found");
         }
 
         return PostHelper.formatPost(post);
     }
 
-    static async findByAuthorId(params: {
-        authorId: string;
-        page?: number;
-        limit?: number;
-        search?: string;
+    static async findByAuthorId(params: SearchParams & {
+        authorId: string,
+        search?: string
     }) {
-        const {
-            authorId,
-            page = 1,
-            limit = 10,
-            search
-        } = params;
-
+        const { page, limit } = parsePaginationParams(params);
+        const search = params.search;
+        const authorId = params.authorId;
         const skip = (page - 1) * limit;
 
         const where: any = {
             authorId,
-            ...(search && {
-                content: {
-                    contains: search,
-                    mode: "insensitive"
-                }
-            })
+            ...(buildSearchWhere(search))
         };
 
         const [posts, total] = await prisma.$transaction([
@@ -54,37 +46,19 @@ export class PostService {
         ]);
 
         return {
-            pegination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            },
+            pagination: buildPagination(page, limit, total),
             posts: posts.map(PostHelper.formatPost)
         };
     }
 
-    static async findMany(params?: {
-        page?: number;
-        limit?: number;
-        search?: string;
+    static async getGlobalFeed(params: SearchParams & {
+        search?: string
     }) {
-        const {
-            page = 1,
-            limit = 10,
-            search
-        } = params ?? {};
-
+        const { page, limit } = parsePaginationParams(params);
+        const search = params.search;
         const skip = (page - 1) * limit;
 
-        const where: any = search
-            ? {
-                content: {
-                    contains: search,
-                    mode: "insensitive"
-                }
-            }
-            : undefined;
+        const where = buildSearchWhere(search);
 
         const [posts, total] = await Promise.all([
             prisma.post.findMany({
@@ -98,13 +72,87 @@ export class PostService {
         ]);
 
         return {
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.ceil(total / limit)
-            },
+            pagination: buildPagination(page, limit, total),
             posts: posts.map((p) => PostHelper.formatPost(p))
+        };
+    }
+
+    static async getPersonalizedFeed(
+        userId: string,
+        params: SearchParams & { search?: string }
+    ) {
+        const { page, limit } = parsePaginationParams(params);
+        const search = params.search;
+        const skip = (page - 1) * limit;
+
+        const userSkills = await prisma.skillOnUser.findMany({
+            where: { userId },
+            select: { skillId: true }
+        });
+        const skillIds = userSkills.map(s => s.skillId);
+
+        if (skillIds.length === 0) {
+            return this.getGlobalFeed(params);
+        }
+
+        const where = {
+            ...buildSearchWhere(search),
+            mentionsOnPost: {
+                some: {
+                    project: {
+                        techs: {
+                            some: {
+                                skillId: { in: skillIds },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+
+        const [posts, total] = await Promise.all([
+            prisma.post.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { createdAt: "desc" },
+                include: postInclude as any
+            }),
+            prisma.post.count({
+                where
+            })
+        ]);
+
+        return {
+            posts: posts.map((p) => PostHelper.formatPost(p)),
+            pagination: buildPagination(page, limit, total)
+        };
+    }
+
+    static async getTrendingFeed(params: SearchParams & { search?: string }) {
+        const { page, limit } = parsePaginationParams(params);
+        const search = params.search;
+        const skip = (page - 1) * limit;
+
+        const where = buildSearchWhere(search)
+
+        const posts = await prisma.post.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: [
+                { likes: { _count: "desc" } },
+                { comments: { _count: "desc" } },
+                { createdAt: "desc" }
+            ],
+            include: postInclude as any
+        });
+
+        const total = await prisma.post.count({ where });
+
+        return {
+            posts: posts.map(PostHelper.formatPost),
+            pagination: buildPagination(page, limit, total)
         };
     }
 
@@ -144,7 +192,7 @@ export class PostService {
             });
 
             if (!post) {
-                throw new Error("Post not found or unauthorized");
+                throw new BadRequestError("Post not found or unauthorized");
             }
 
             if (data.mentionsOnPost) {
@@ -183,7 +231,7 @@ export class PostService {
         });
 
         if (!post) {
-            throw new Error("Post not found or unauthorized");
+            throw new BadRequestError("Post not found or unauthorized");
         }
 
         await prisma.post.delete({

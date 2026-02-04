@@ -13,6 +13,12 @@ const mentionSchema = z
         }
     );
 
+const paginationQuery = z.object({
+    page: z.string().optional(),
+    limit: z.string().optional(),
+    search: z.string().optional()
+});
+
 export const PostValidation = {
     createPost: z.object({
         body: z.object({
@@ -45,19 +51,19 @@ export const PostValidation = {
         params: z.object({
             authorId: objectId,
         }),
-        query: z.object({
-            page: z.string().optional(),
-            limit: z.string().optional(),
-            search: z.string().optional(),
-        }),
+        query: paginationQuery
     }),
 
     getPosts: z.object({
-        query: z.object({
-            page: z.string().optional(),
-            limit: z.string().optional(),
-            search: z.string().optional(),
-        }),
+        query: paginationQuery
+    }),
+
+    personalizedFeed: z.object({
+        query: paginationQuery
+    }),
+
+    trendingFeed: z.object({
+        query: paginationQuery
     }),
 
     deletePost: z.object({
