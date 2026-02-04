@@ -239,7 +239,7 @@ export class ReviewService {
 
         return {
             totalReviews: result._count,
-            avgRating: result._avg,
+            avgRating: result._avg.rating,
         };
     };
 
