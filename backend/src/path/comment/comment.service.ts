@@ -13,13 +13,31 @@ export class CommentService {
             throw new BadRequestError("Invalid comment target");
         }
 
+        if (data.parentCommentId) {
+            const parent = await prisma.comment.findUnique({
+                where: { id: data.parentCommentId },
+                select: { postId: true, projectId: true },
+            });
+
+            if (!parent) {
+                throw new BadRequestError("Parent comment not found");
+            }
+
+            if (
+                parent.postId !== data.postId ||
+                parent.projectId !== data.projectId
+            ) {
+                throw new BadRequestError("Parent comment target mismatch");
+            }
+        }
+
         const comment = await prisma.comment.create({
             data: {
                 content: data.content,
                 authorId,
                 postId: data.postId,
                 projectId: data.projectId,
-                parentCommentId: data.parentCommentId,
+                parentCommentId: data.parentCommentId ?? null,
             },
             include: {
                 author: {
@@ -50,7 +68,7 @@ export class CommentService {
         const where = {
             ...(target.postId && { postId: target.postId }),
             ...(target.projectId && { projectId: target.projectId }),
-            parentCommentId: { equals: null },
+            parentCommentId: null,
         };
 
         const [comments, total] = await prisma.$transaction([
