@@ -2,7 +2,7 @@ import { Router } from "express";
 import { likeController } from "./like.controller.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
-import { LikeValidation } from "../../validation/like/like.validation.js";
+import { LikeValidation } from "./like.validation.js";
 
 const likeRouter = Router();
 

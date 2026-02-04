@@ -2,7 +2,7 @@
 import { messageController } from './message.controller.js';
 import { Router } from 'express';
 import { validate } from '../../middleware/validate.js';
-import { MessageValidation } from '../../validation/message/message.validation.js';
+import { MessageValidation } from './message.validation.js';
 import { requireAuth } from '../../middleware/auth.middleware.js';
 
 const router = Router();

@@ -3,7 +3,7 @@ import { matchController } from './match.controller.js';
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.middleware.js';
 import { validate } from '../../middleware/validate.js';
-import { MatchValidation } from '../../validation/match/match.validation.js';
+import { MatchValidation } from './match.validation.js';
 
 export const matchRouter = Router();
 

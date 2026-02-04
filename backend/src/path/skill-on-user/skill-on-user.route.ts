@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { skillOnUser } from "./skill-on-user.controller.js";
 import { requireAuth as auth } from "../../middleware/auth.middleware.js";
-import { SkillOnUserValidation } from "../../validation/skill-on-user/skill-on-user.validation.js";
+import { SkillOnUserValidation } from "./skill-on-user.validation.js";
 import { validate } from '../../middleware/validate.js';
 
 const router = Router();

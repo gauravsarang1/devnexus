@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
-import { ProjectValidation } from "../../validation/project/project.validation.js";
+import { ProjectValidation } from "./project.validation.js";
 import { projectController } from "./project.controller.js";
 
 export const projectRouter = Router();

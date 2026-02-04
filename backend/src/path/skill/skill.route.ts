@@ -1,7 +1,7 @@
 import { skillController } from "./skill.controller.js";
 import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
-import { SkillValidation } from "../../validation/skill/skill.validation.js";
+import { SkillValidation } from "./skill.validation.js";
 
 
 const router = Router();

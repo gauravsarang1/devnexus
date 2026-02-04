@@ -1,7 +1,7 @@
 import { photoController } from './photo.controller.js';
 import { Router } from 'express';
 import { validate } from '../../middleware/validate.js';
-import { PhotoValidation } from '../../validation/phtoto/photo.validation.js';
+import { PhotoValidation } from './photo.validation.js';
 import { requireAuth } from '../../middleware/auth.middleware.js';
 
 const router = Router();

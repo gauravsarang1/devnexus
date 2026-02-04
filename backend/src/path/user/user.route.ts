@@ -3,7 +3,7 @@ import { userController } from "./user.controller.js";
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
-import { UserValidation } from "../../validation/user/user.validation.js";
+import { UserValidation } from "./user.validation.js";
 
 const router = Router();
 

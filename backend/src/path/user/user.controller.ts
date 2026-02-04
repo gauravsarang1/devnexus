@@ -2,7 +2,7 @@
 import { successResponse, errorResponse } from "../../utils/apiResponse.js";
 import { Request, Response, NextFunction } from "express";
 import { UserService } from "./user.service.js";
-import { objectId } from "../../validation/common/objectId.js";
+import { objectId } from "../../common/objectId.js";
 
 export const userController = {
     current: async (req: Request, res: Response, next: NextFunction) => {

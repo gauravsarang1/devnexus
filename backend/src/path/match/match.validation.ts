@@ -1,6 +1,6 @@
 
 import z from "zod";
-import { objectId } from "../common/objectId.js";
+import { objectId } from "../../common/objectId.js";
 
 export const MatchValidation = {
     getMatchById: z.object({

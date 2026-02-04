@@ -3,7 +3,7 @@ import { Router } from "express";
 import { notificationController } from "./notification.controller.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validate.js";
-import { NotificationValidation } from "../../validation/notification/notification.validation.js";
+import { NotificationValidation } from "./notification.validation.js";
 
 const router = Router();
 

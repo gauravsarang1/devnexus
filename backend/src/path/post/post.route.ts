@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { postController } from "./post.controller.js";
 import { validate } from "../../middleware/validate.js";
-import { PostValidation } from "../../validation/post/post.validation.js";
+import { PostValidation } from "./post.validation.js";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 
 const postRouter = Router();
