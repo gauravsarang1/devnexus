@@ -20,15 +20,27 @@ postRouter.get(
 );
 
 postRouter.get(
-    "/:postId",
-    validate(PostValidation.getPostById),
-    postController.getPostById
+    "/personalized",
+    validate(PostValidation.personalizedFeed),
+    postController.getPersonalizedFeed
+);
+
+postRouter.get(
+    "/trending",
+    validate(PostValidation.trendingFeed),
+    postController.getTrendingFeed
 );
 
 postRouter.get(
     "/author/:authorId",
     validate(PostValidation.getPostsByAuthor),
     postController.getPostsByAuthor
+);
+
+postRouter.get(
+    "/:postId",
+    validate(PostValidation.getPostById),
+    postController.getPostById
 );
 
 postRouter.put(

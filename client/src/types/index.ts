@@ -248,6 +248,7 @@ export type ProjectOwner = {
   id: string;
   name: string;
   uId: string;
+  avatar?: string
 };
 
 export type ProjectLogo = {
@@ -293,7 +294,7 @@ export interface Project {
   /* -------- Relations -------- */
 
   user: ProjectOwner;
-  logo?: ProjectLogo | null;
+  logo?: string | null;
   techs: ProjectSkill[];
 
   _count?: ProjectCounts;

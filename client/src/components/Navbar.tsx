@@ -105,7 +105,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
     try {
       await authService.logout();
       dispatch(logout());
-      navigate("/");
+      navigate?.("/");
     } finally {
       setIsLoggingOut(false);
       setIsDropdownOpen(false);
@@ -125,7 +125,7 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
           {/* Logo */}
           <div
             className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
-            onClick={() => navigate("/home")}
+            onClick={() => navigate?.("/home")}
           >
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <div className="w-4 h-4 border-2 border-white rounded-sm rotate-45" />
@@ -138,11 +138,13 @@ const Navbar: React.FC<NavbarProps> = ({ navigate }) => {
 
 
           {/* Desktop Nav Links */}
-          <div className="hidden md:flex flex-grow justify-center">
+          <div className="hidden md:flex flex-grow max-w-[520px] justify-center">
             <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
               {[
                 { to: "/home", label: "Home" },
+                { to: "/posts", label: "Posts"},
                 { to: "/search", label: "Search" },
+                { to: "/projects", label: "Projects"},
                 { to: "/chat", label: "Chat" },
                 { to: "/matches", label: "Matches" },
               ].map(({ to, label }) => (

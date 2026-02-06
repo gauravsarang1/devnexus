@@ -17,7 +17,9 @@ const RegisterPage = lazy(() => import('./src/pages/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./src/pages/ForgetPasswordPage'));
 const VerifyOtpPage = lazy(() => import('./src/pages/VerifyOtpPage'));
 const PostFeedPage = lazy(() => import('./src/pages/posts/PostFeedPage'));
-const SinglePostPage = lazy(() => import('./src/pages/posts/SinglePostPage'))
+const SinglePostPage = lazy(() => import('./src/pages/posts/SinglePostPage'));
+const ProjectFeedPage = lazy(() => import('./src/pages/project/ProjectFeedPage'));
+const ProjectDetailsPage = lazy(() => import('./src/pages/project/ProjectDetailsPage'));
 
 import SEO from './src/components/SEO';
 import MainLayout from './src/components/MainLayout';
@@ -81,6 +83,8 @@ const App: React.FC = () => {
             <Route path="/search" element={<><SEO title="Find Partners" /><SearchPage navigate={navigate} /></>} />
             <Route path="/posts" element={<PostFeedPage />} />
             <Route path='/posts/:postId' element={<SinglePostPage />}/>
+            <Route path='/projects' element={<ProjectFeedPage />}/>
+            <Route path='/projects/:slug' element={<ProjectDetailsPage />}/>
           </Route>
           {/* No Header Layout */}
           <Route path="/chat" element={<><SEO title="Workspace" /><ChatPage navigate={navigate} /></>} />

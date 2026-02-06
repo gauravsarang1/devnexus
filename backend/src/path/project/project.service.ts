@@ -3,13 +3,14 @@ import { NotFoundError } from "../../errors/NotFoundError.js";
 import { SearchParams } from "../../types/search-params.js";
 import { parsePaginationParams } from "../../utils/formats.js";
 import { CreateProjectInput, UpdateProjectInput } from "./project.type.js";
+import { formatUser } from "../../utils/formats.js";
 
 export class ProjectService {
 
     static async create(userId: string, data: CreateProjectInput) {
         const { skillIds = [], ...projectData } = data;
 
-        return prisma.project.create({
+        const project = await prisma.project.create({
             data: {
                 ...projectData,
                 userId,
@@ -22,8 +23,29 @@ export class ProjectService {
                 techs: {
                     include: { skill: true },
                 },
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        uId: true,
+                        photo: {
+                            where: {
+                                type: "AVATAR"
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt: "desc"
+                            }
+                        }
+                    }
+                }
             },
         });
+
+        return {
+            ...project,
+            user: formatUser(project.user)
+        }
     }
 
     static async update(
@@ -39,7 +61,7 @@ export class ProjectService {
 
         const { skillIds, ...updateData } = data;
 
-        return prisma.project.update({
+        const updatedProject = await prisma.project.update({
             where: { id: projectId },
             data: {
                 ...updateData,
@@ -55,8 +77,29 @@ export class ProjectService {
                 techs: {
                     include: { skill: true },
                 },
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        uId: true,
+                        photo: {
+                            where: {
+                                type: "AVATAR"
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt: "desc"
+                            }
+                        }
+                    }
+                }
             },
         });
+
+        return {
+            ...updatedProject,
+            user: formatUser(updatedProject.user)
+        }
     }
 
     static async getById(projectId: string) {
@@ -109,6 +152,15 @@ export class ProjectService {
                         id: true,
                         name: true,
                         uId: true,
+                        photo: {
+                            where: {
+                                type: "AVATAR"
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt: "desc"
+                            }
+                        }
                     },
                 },
                 techs: {
@@ -131,7 +183,10 @@ export class ProjectService {
             throw new NotFoundError("Project not found");
         }
 
-        return project;
+        return {
+            ...project,
+            user: formatUser(project.user)
+        };
     }
 
     static async getByUserId(userId: string, params: SearchParams) {
@@ -194,10 +249,25 @@ export class ProjectService {
                 include: {
                     logo: true,
                     user: {
-                        select: { id: true, name: true, uId: true },
+                        select: { id: true, name: true, uId: true, photo: {
+                            where: {
+                                type: "AVATAR"
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt:"desc"
+                            }
+                        } },
                     },
                     techs: {
                         include: { skill: true },
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            saves: true,
+                            reviews: true,
+                        },
                     },
                 },
             }),
@@ -205,7 +275,7 @@ export class ProjectService {
         ]);
 
         return {
-            projects,
+            projects: projects.map((p) => ({...p, user: formatUser(p.user)})),
             pagination: {
                 total,
                 page,
@@ -254,10 +324,25 @@ export class ProjectService {
                 include: {
                     logo: true,
                     user: {
-                        select: { id: true, name: true, uId: true },
+                        select: { id: true, name: true, uId: true, photo: {
+                            where: {
+                                type: "AVATAR"
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt:"desc"
+                            }
+                        } },
                     },
                     techs: {
                         include: { skill: true },
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            saves: true,
+                            reviews: true,
+                        },
                     },
                 },
             }),
@@ -265,7 +350,7 @@ export class ProjectService {
         ]);
 
         return {
-            projects,
+            projects: projects.map((p) => ({...p, user: formatUser(p.user)})),
             pagination: {
                 total,
                 page,
@@ -280,13 +365,22 @@ export class ProjectService {
         const { page, limit } = parsePaginationParams(params);
         const skip = (page - 1) * limit;
 
-        const projects = await prisma.project.findMany({
+        const [ projects, total ] = await Promise.all([
+            prisma.project.findMany({
             skip,
             take: limit,
             include: {
                 logo: true,
                 user: {
-                    select: { id: true, name: true, uId: true },
+                    select: { id: true, name: true, uId: true, photo: {
+                        where: {
+                                type: "AVATAR"
+                            },
+                            take: 1,
+                            orderBy: {
+                                createdAt:"desc"
+                            }
+                    } },
                 },
                 techs: {
                     include: { skill: true },
@@ -305,12 +399,13 @@ export class ProjectService {
                 { reviews: { _count: "desc" } },
                 { createdAt: "desc" },
             ],
-        });
+        }),
 
-        const total = await prisma.project.count();
+            prisma.project.count()
+        ])
 
         return {
-            projects,
+            projects: projects.map((p) => ({...p, user: formatUser(p.user)})),
             pagination: {
                 total,
                 page,

@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2 } from 'lucide-react';
-import { mockApi } from '../../api';
 
 interface PostActionsProps {
   postId: string;
@@ -36,7 +35,7 @@ const PostActions: React.FC<PostActionsProps> = ({
     setLikeCount(prev => newLikedState ? prev + 1 : prev - 1);
 
     try {
-      await mockApi.toggleLike(postId);
+      
     } catch (error) {
       // Revert if API fails
       setIsLiked(!newLikedState);
@@ -55,7 +54,6 @@ const PostActions: React.FC<PostActionsProps> = ({
     setIsSaved(newSavedState);
 
     try {
-      await mockApi.toggleSave(postId);
     } catch (error) {
       setIsSaved(!newSavedState);
     } finally {
