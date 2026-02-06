@@ -4,6 +4,7 @@ import { PostCard, PostSkeleton } from "../../components/post";
 import { FeedType, Post } from "../../types";
 import { postService } from "../../services/postService";
 import { AlertCircle, RefreshCw, TrendingUp, Home, User } from "lucide-react";
+import MobileNav from "@/src/components/MobileNav";
 
 const PAGE_LIMIT = 10;
 
@@ -231,6 +232,7 @@ const PostFeedPage: React.FC = () => {
 
         </div>
       </div>
+      <MobileNav />
     </div>
   );
 };

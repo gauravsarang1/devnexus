@@ -7,6 +7,7 @@ import CommentInput from "../../components/comments/CommentInput";
 import { Post, Comment } from "../../types";
 import { postService } from "../../services/postService";
 import { commentService } from "../../services/commentService";
+import MobileNav from "@/src/components/MobileNav";
 
 const COMMENTS_LIMIT = 10;
 
@@ -180,6 +181,7 @@ const SinglePostPage: React.FC = () => {
           </div>
         )}
       </div>
+      <MobileNav />
     </div>
   );
 };

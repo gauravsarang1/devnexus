@@ -327,7 +327,7 @@ const ProfilePage: React.FC<{ navigate: (to: string) => void }> = ({
         )}
       </AnimatePresence>
 
-      <MobileNav navigate={navigate} />
+      <MobileNav/>
     </div>
   );
 };

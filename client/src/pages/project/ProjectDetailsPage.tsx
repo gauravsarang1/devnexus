@@ -20,6 +20,7 @@ import { CreateProjectModal } from '../../components/project/CreateProjectModal'
 import { Project, Review } from '../../types/index';
 import { projectService } from '@/src/services/projectService';
 import { reviewService } from '../../services/reviewService';
+import MobileNav from '@/src/components/MobileNav';
 
 const ProjectDetailsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -332,6 +333,8 @@ const ProjectDetailsPage: React.FC = () => {
         initialData={project}
         onSuccess={fetchProject}
       />
+
+      <MobileNav />
     </div>
   );
 };

@@ -6,6 +6,7 @@ import { ProjectGridSkeleton } from '../../components/project/ProjectSkeleton';
 import { CreateProjectModal } from '../../components/project/CreateProjectModal';
 import { Project, FeedType as ProjectFeedTab } from '../../types';
 import { projectService } from '@/src/services/projectService';
+import MobileNav from '@/src/components/MobileNav';
 
 const ProjectFeedPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ProjectFeedTab>("global");
@@ -178,6 +179,8 @@ const ProjectFeedPage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => fetchProjects(1, true)}
       />
+
+      <MobileNav />
     </div>
   );
 };
