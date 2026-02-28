@@ -7,7 +7,7 @@ interface MentionTextProps {
   mentions: MentionEntry[];
 }
 
-const MentionText: React.FC<MentionTextProps> = ({ content, mentions }) => {
+const MentionText: React.FC<MentionTextProps> = ({ content, mentions }) => {  
   return (
     <div className="space-y-4">
       <p className="text-slate-800 leading-relaxed whitespace-pre-wrap text-[1.05rem] font-medium">
